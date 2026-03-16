@@ -3,6 +3,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlmodel import Session, select
 from datetime import date
+from typing import Optional
 
 
 from src.database import engine
@@ -112,6 +113,63 @@ def process_add_transaction(
     # user's browser to immediately bounce back to the Home Page ('/') so
     # they can visually verify their new data appeared in the ledger.
     return RedirectResponse(url="/", status_code=303)
+
+
+@app.get("/ledger", response_class=HTMLResponse)
+def read_ledger(
+    request: Request,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    category: Optional[str] = None,
+    payment_status: Optional[str] = None,
+    session: Session = Depends(get_session),
+):
+    """
+    Master Ledger Search Engine.
+
+    Only queries the database if at least one search parameter is provided.
+    Otherwise, returns an empty list to keep the initial page load clean.
+    """
+
+    # Check if the user actually clicked 'Filter' with data
+    user_provided_filters = any([start_date, end_date, category, payment_status])
+
+    if not user_provided_filters:
+        # If no filters, don't even bother asking Postgres. Just return empty.
+        transactions = []
+        has_searched = False
+    else:
+        # If they did search, build the dynamic query
+        has_searched = True
+
+        # The base query (grab everything, newest first)
+        statement = select(Transaction).order_by(Transaction.txn_date.desc())
+
+        # 2. Dynamically stack the filters (The "Mix and Match" Logic)
+        if start_date:
+            statement = statement.where(Transaction.txn_date >= start_date)
+
+        if end_date:
+            statement = statement.where(Transaction.txn_date <= end_date)
+
+        if category:
+            statement = statement.where(Transaction.category == category)
+
+        if payment_status:
+            statement = statement.where(Transaction.payment_status == payment_status)
+
+        # 3. Execute the final, customized query
+        transactions = session.exec(statement).all()
+
+        # 4. Hand the exact filtered results to the ledger.html page
+    return templates.TemplateResponse(
+        "ledger.html",
+        {
+            "request": request,
+            "transactions": transactions,
+            "has_searched": has_searched,
+        },
+    )
 
 
 @app.post("/transactions/", response_model=Transaction)
