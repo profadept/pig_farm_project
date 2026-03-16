@@ -1,0 +1,114 @@
+Txn_ID,Date,Type,Category,Item_Description,Qty,Unit_Price,Total_Amount,Payment_Status,Remarks
+,2025-10-30,,Livestock / Fixed Assets.,Purchase of In-Pig Gilt,2,350000,700000,Full,From Iya Eji Farms
+,2025-10-30,,Rent / Property Costs,Pen Rentage,2,40000,80000,Full,Sent to Iya Eji and handed to Mrs. Fumilola
+,2025-10-31,,Rent / Property Costs,Pen Rentage,1,40000,40000,Full,Sent to Mrs. Fumilola
+,2025-10-31,,Utilities,Yearly Security,1,4500,4500,Full,Sent to Mrs. Fumilola
+,2025-10-31,,Medication,Disinfectant,1,14500,14500,Full,Epiphany Vets
+,2025-10-31,,Utilities,Broom,1,1000,1000,Full,First SleepWell
+,2025-10-31,,Utilities,Bucket,1,1500,1500,Full,First SleepWell
+,2025-10-31,,Utilities,Bailer,1,500,500,Full,First SleepWell
+,2025-10-31,,Labor,Land Clearing,1,6000,6000,Full,Labors
+,2025-11-01,,Utilities,Drum for Feed,1,52000,52000,Full,Sent to Mrs. Fumilola
+,2025-11-01,,Labor,Pen Cleaning,1,6000,6000,Full,Sent to Mrs. Fumilola
+,2025-11-03,,Utilities,Cement,0.5,10400,5200,Full,Purchase of Half Bag of Cement
+,2025-11-03,,Labor,Bricklayer Payment,1,4000,4000,Full,Repair of Pen and Water Diversion by Briclayer
+,2025-11-04,,Utilities,Padlock,1,5300,5300,Full,Sent to Mrs. Fumilola
+,2025-11-04,,Utilities,Rain Boot,1,6500,6500,Full,Taiwo Farm Agro tech
+,2025-11-04,,Utilities,Big Bowl,1,4500,4500,Full,Sent to Mrs. Fumilola
+,2025-11-04,,Utilities,Small Bowl,1,1500,1500,Full,Sent to Mrs. Fumilola
+,2025-11-04,,Utilities,Fetcher,1,2700,2700,Full,Fetcher and Rope 
+,2025-11-04,,Labor,Feed Transportation,1,3000,3000,Full,Bike man to bring Feed From Town
+,2025-11-04,,Labor,In-Pig Gilt Transportation,2,2500,5000,Full,TY Transport 
+,2025-11-04,,Feed,PKC,2,12000,24000,Full,From Town
+,2025-11-30,,Transport,Transportation To Farm,15,1550,24000,Full,Transport to Farm for November
+,2025-11-24,,Feed,PKC,2,12700,25400,Full,"Restocking of Feed after 20days, i.e each Gilt ate 1 pags for 10 days"
+,2025-12-01,,Medication,Ivanor Injection L.A 2% 1000ml (Invermectin),1,3050,3050,Full,Epiphany Vets
+,2025-12-01,,Medication,Vitawright 100G,1,4550,4550,Full,Epiphany Vets
+,2025-12-01,,Medication,Albion Amoxycol 100G,1,5550,5550,Full,Epiphany Vets
+,2025-12-01,,Medication,Needle and Syinge 2mls,2,50,100,Full,Epiphany Vets
+,2025-12-01,,Medication,Needle and Syinge 5mls,5,50,250,Full,Epiphany Vets
+,2025-12-01,,Medication,Multinor Injection 100ml,1,1700,1700,Full,Epiphany Vets
+,2025-12-01,,Medication,Albenor 2.5% 100ml (Albendazole),1,680,680,Full,Epiphany Vets
+,2025-12-01,,Medication,Tetranor (Oxytet) 20% L.A 100ml,1,2550,2550,Full,Epiphany Vets
+,2025-12-01,,Medication,I.D NOR Iron Dextran 100ml,1,1880,1880,Full,Epiphany Vets
+,2025-12-01,,Rent / Property Costs,Pen Rentage,2,45000,90000,Full,Sent to Mrs. Fumilola
+,2025-12-01,,Capital,Yearly Security,1,1500,1500,Full,Sent to Mrs. Fumilola
+,2025-11-25,,Labor,Worker Salary,1,2000,2000,Part,6000naira salary for 2 pen will be paid fully on December 4th 2025
+,2025-05-12,,Transport,Transportation to Farm,2,2000,4000,Full,Transportation to Farm twice on day of littering
+,2025-05-12,,Labor,Full payment for Labor,1,4000,4000,Full,Worker Salary Paid in full 
+,2025-05-12,,Utilities,Nylon,10,700,7000,Full,Nylon to stop Rain from entering the Pen from the Window 
+,2025-12-08,,Medication,Gent,1,5450,5450,Full,Bought from El-Bolus Farm Limited 
+,2025-12-08,,Transport,Transportation to Farm,2,1800,3600,Full,Transport to Farm Twice
+,2025-12-08,,Transport,Transport to El-Bolus Farm,2,700,1400,Full,Transport to get drugs from El-Bolus Farm
+,2025-12-08,,Medication,Injection 2ml,2,60,120,Full,Injection Purchase 2ml from El-Bolus Farm Limited 
+,2025-12-08,,Medication,Injection 5ml,2,70,140,Full,Injection Purchase 5ml from El-Bolus Farm Limited 
+,2025-12-09,,Feed,Maize,50,460,23000,Full,Purchase 50kg of Maize from farm support Services
+,2025-12-09,,Transport,Transport to Farm Support,1,2000,2000,Full,Tranport for To and fro to Farm Support
+,2025-12-09,,Feed,SoyaMeal,5,540,2700,Full,Purchase of 5kg of SoyaMeal from Farm Support
+,2025-12-09,,Transport,Transport to Farm,1,1800,1800,Full,Transport to Farm (Oke Aro) to and fro
+,2025-12-10,,Transport,Transport to Farm,1,1800,1800,Full,Transport to Farm (Oke Aro) to and fro
+,2025-12-11,,Labor,Bush Clearing,1,3000,3000,Full,Clearing the Bush areound the Pen
+,2025-12-18,,Feed,PKC,2,12700,25400,Full,Purchase of PKC from Iya Eji Oke Aro Farm
+,2025-12-13,,Transport,Transport to Farm,1,1800,1800,Full,Transport to Farm(Oke Aro) to and fro
+,2025-12-15,,Transport,Transport to Farm,2,1800,3600,Full,Transport to Farm Oke Aro TO and Fro
+,2025-12-16,,Transport,Transport to Farm,1,2000,2000,Full,Transport to Farm Oke Aro TO and Fro
+,2025-12-17,,Transport,Transport to Farm,1,2000,2000,Full,Transport to Farm Oke Aro TO and Fro
+,2025-12-18,,Transport,Transport to Farm,1,2000,2000,Full,Transport to Farm Oke Aro TO and Fro
+,2025-12-25,,Transport,Transport to Farm,4,2000,8000,Full,Transport to Farm Oke Aro TO and Fro
+,2025-12-29,,Transport,Transport to Farm,1,3100,3100,Full,Transport to Farm Oke Aro TO and Fro
+,2025-12-29,,Labor,Food on Farm,1,1350,1350,Full,
+,2025-12-29,,Utilities,Hammer,1,3500,3500,Full,Purchase hammer for farm construction work
+,2025-12-29,,Utilities,Nails,1,900,900,Full,Purchase of nails for farm construction work
+,2025-12-29,,Utilities,Plank,1,4000,4000,Full,Purchase of wood for farm construction work
+,2025-12-29,,Utilities,2 by 2,1,1000,1000,Full,Purchase of wood for farm construction work
+,2025-12-29,,Labor,Worker Fee,1,3000,3000,Full,Workers fee for Pen Maintenance and Xmas bonus Gift
+,2025-12-29,,Utilities,Soap,1,500,500,Full,Soap
+,2025-12-29,,Transport,Transport to carry plank to Farm for Pen maintenance,1,1000,1000,Full,Farm Maintenance
+,2025-12-30,,Utilities,Brush,1,1200,1200,Full,Farm Maintenance Kit
+,2025-12-30,,Feed,1 Rubber of Feed Starter,1,1400,1400,Full,Feed Starter
+,2025-12-30,,Transport,Transport,1,2000,2000,Full,Transport to Farm Oke Aro TO and Fro
+,2025-12-02,,Transport,Transport,1,2000,2000,Full,Transport to Farm Oke Aro TO and Fro
+,2026-01-29,,Medication,Morigad,2,1600,3200,Full,Medication
+,2026-01-29,,Medication,Izal,2,800,1600,Full,Farm Maintenance
+,2026-01-29,,Medication,Oxytoxin,2,500,1000,Full,Medication
+,2026-01-03,,Utilities,Cement,1,10300,10300,Full,Purchase of cement for renovation of Pens before weaning
+,2026-01-03,,Transport,Transport,1,2100,2100,Full,Transport to Farm Oke Aro TO and Fro
+,2026-01-03,,Labor,Bricklayer Part Payment,1,4000,4000,Full,Part payment for Bricklayer labor
+,2026-01-02,,Transport,Transport,1,2100,2100,Full,Transport to Farm Oke Aro TO and Fro
+,2026-01-05,,Feed,Maize,25,350,8750,Full,Purchase of maize of 25kg
+,2026-01-05,,Feed,SoyaMeal,25,540,13500,Full,Purchase of Soyameal of 25kg
+,2026-01-05,,Feed,Salt,5,500,2500,Full,Purchase of 5kg of salt
+,2026-01-05,,Feed,PKC,100,250,25000,Full,Purchase of 100kg of PKC for the rate of 250 per kg
+,2026-01-05,,Transport,Transport,1,2050,4100,Full,Transport to Farm Support to and fro
+,2026-01-06,,Transport,Transport,1,2100,2100,Full,Transport to farm Oke Aro TO and Fro
+,2026-01-06,,Feed,Starter Feed ,25,500,25000,Full,Starter Feed for weaning 25kg
+,2026-01-05,,Labor,Workers Salary,1,6000,6000,Full,Full Payment of worker Salary 3000 per pen.
+,2026-01-09,,Labor,Bricklayer ,1,5000,5000,Full,Full payment for Bricklayer labor from id=76
+,2026-01-09,,Others,Stones Purchse,1,2000,2000,Full,Purchase of stone used to mould feeding section inside pen
+,2026-01-09,,Transport,Transport,1,2000,2000,Full,Transport to Oke Aro to and fro
+,2026-01-09,,Labor,Labor,1,1000,1000,Full,Payment to labor to help with pen work and maintenence
+,2026-01-09,,Others,Soap,1,500,500,Full,Purchase of Soap
+,2026-01-16,,Transport,Transport,4,2000,8000,Full,Transport to Oke Aro to and fro for 4 days from 12 to 19
+,2026-01-20,,Others,Izal,1,800,800,Full,Purchase of Izal to wash the floor for weaning
+,2026-01-20,,Transport,Transport,1,2000,2000,Full,Transport to Oke Aro to and fro
+,2026-01-21,,Transport,Transport,1,2000,2000,Full,Transport to Oke Aro to and fro
+,2026-01-21,,Medication,Sulphonor,1,3000,3000,Full,Medication
+,2026-01-21,,Others,Cement,1,1000,1000,Full,Purchase of cement for maintenance
+,2026-01-22,,Labor,Worker Salary Part Payment,1,1000,1000,Part,Worker Salary Part Payment
+,2026-01-22,,Transport,Transport,1,2000,2000,Full,Transport to Oke Aro to and fro
+,2026-01-22,,Medication,Flagyl,1,1000,1000,Full,Purchase of Flagy for medication
+,2026-01-22,,Medication,Tetracaclyn,1,500,500,Full,Purchase of Tetracaclyn for medication
+,2026-01-30,,Medication,Ivernor,1,3000,3000,Full,Mdication for Pigs
+,2026-01-30,,Transport,Transport,1,2000,2000,Full,Transport to Oke Aro to and fro
+,2026-02-02,,Transport,Transport,1,3000,3000,Full,Transport to Oke Aro to and fro
+,2026-02-02,,Medication,Flagyl,1,1000,1000,Full,Purchase of Flagy for medication
+,2026-02-02,,Medication,Tetracaclyn,1,900,900,Full,Purchase of Tetracaclyn for medication
+,2026-02-03,,Transport,Transport,1,2000,2999,Full,Transport to Oke Aro to and fro
+,2026-02-03,,Feed,Starter Feed ,2,1300,2600,Full,Purchase of Starter feed
+,2026-02-03,,Others,Izal,1,1200,1200,Full,Purchase of Izal to wash the floor 
+,2026-02-05,,Transport,Transportation to Farm,1,2000,2000,Full,Transport to Oke Aro to and fro
+,2026-02-05,,Labor,Worker Salary,1,6000,6000,Full,Full payment for worker Salary from id=97
+,2026-02-09,,Transport,Transport,1,2000,2000,Full,Transport to Oke Aro to and fro
+,2026-02-10,,Transport,Transport,1,2000,2000,Full,Transport to Oke Aro to and fro
+,2026-02-10,,Labor,Bush Clearing,1,1000,1000,Full,Clearing of bush around the pen
+,2026-02-10,,Others,Soap,1,500,500,Full,Purchase of Soap for washing the pen

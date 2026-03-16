@@ -15,6 +15,7 @@ class CategoryEnum(str, Enum):
     property = "Property"
     other = "Other"
     labor = "Labor"
+    transport = "Transport"
 
 
 class StatusEnum(str, Enum):
