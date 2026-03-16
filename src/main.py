@@ -242,6 +242,40 @@ def process_edit_transaction(
     return RedirectResponse(url="/ledger", status_code=303)
 
 
+@app.get("/transaction/{id}", response_class=HTMLResponse)
+def view_transaction(
+    id: int, request: Request, session: Session = Depends(get_session)
+):
+    """
+    The View Route (Read)
+    Fetches a single transaction and displays it on a dedicated receipt page.
+    """
+    transaction = session.get(Transaction, id)
+    if not transaction:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+
+    return templates.TemplateResponse(
+        "view_transaction.html", {"request": request, "transaction": transaction}
+    )
+
+
+@app.post("/delete-transaction/{id}", response_class=RedirectResponse)
+def delete_transaction(id: int, session: Session = Depends(get_session)):
+    """
+    The Delete Route (Destroy)
+    Permanently removes a transaction from Postgres and reloads the ledger.
+    """
+    transaction = session.get(Transaction, id)
+    if not transaction:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+
+    session.delete(transaction)
+    session.commit()
+
+    # 303 Redirect forces the browser back to the Ledger
+    return RedirectResponse(url="/ledger", status_code=303)
+
+
 @app.post("/transactions/", response_model=Transaction)
 def create_transaction(
     transaction: Transaction, session: Session = Depends(get_session)
