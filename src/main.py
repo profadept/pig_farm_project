@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 
 
 from src.database import create_db_and_tables
+from src import models  # noqa: F401
 
 
 @asynccontextmanager
@@ -12,7 +13,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 
 
 @app.get("/")
