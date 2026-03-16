@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Depends, Form
+from fastapi import FastAPI, Request, Depends, Form, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlmodel import Session, select
@@ -6,7 +6,7 @@ from datetime import date
 
 
 from src.database import engine
-from src.models import Transaction
+from src.models import Transaction, CategoryEnum, StatusEnum
 
 
 # The Boss: Now with professional metadata for your documentation
@@ -36,17 +36,16 @@ def read_root(request: Request, session: Session = Depends(get_session)):
     """
     Main Dashboard Endpoint.
 
-    Queries the database for all transaction records and injects them into 
+    Queries the database for all transaction records and injects them into
     the index.html template using Jinja2 to render the visual ledger.
     """
     # 1. Grab all transactions using your secure session
-    statement = select(Transaction)
+    statement = select(Transaction).order_by(Transaction.txn_date.desc()).limit(10)
     transactions = session.exec(statement).all()
 
     # 2. Hand the web request and the data over to the HTML template
     return templates.TemplateResponse(
-        "index.html", 
-        {"request": request, "transactions": transactions}
+        "index.html", {"request": request, "transactions": transactions}
     )
 
 
@@ -54,8 +53,8 @@ def read_root(request: Request, session: Session = Depends(get_session)):
 def show_add_transaction(request: Request):
     """
     Displays the HTML form for data entry.
-    
-    This is a simple GET request that just grabs the 'add_transaction.html' 
+
+    This is a simple GET request that just grabs the 'add_transaction.html'
     child template and injects it into the base shell.
     """
     return templates.TemplateResponse("add_transaction.html", {"request": request})
@@ -65,22 +64,29 @@ def show_add_transaction(request: Request):
 def process_add_transaction(
     txn_date: date = Form(...),
     txn_type: str = Form(...),
-    category: str = Form(...),
+    category: CategoryEnum = Form(...),
     item_description: str = Form(...),
     qty: float = Form(...),
     unit_price: float = Form(...),
-    payment_status: str = Form(...),
+    payment_status: StatusEnum = Form(...),
     remarks: str = Form(None),
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
 ):
     """
     Intercepts the HTML form submission, saves the data, and redirects the user.
-    
+
     Why we use Form(...):
-    Unlike JSON APIs, HTML forms send data as 'x-www-form-urlencoded'. 
-    The Form() tool tells FastAPI to look for those specific 'name' attributes 
+    Unlike JSON APIs, HTML forms send data as 'x-www-form-urlencoded'.
+    The Form() tool tells FastAPI to look for those specific 'name' attributes
     from the HTML inputs.
     """
+
+    # Backend Security Check (In case they bypass the HTML form)
+    if qty < 0 or unit_price < 0:
+        raise HTTPException(
+            status_code=400, detail="Quantity and Price cannot be negative."
+        )
+
     # 1. Calculate the Data Science Math (Total Amount) automatically!
     total_amount = qty * unit_price
 
@@ -94,7 +100,7 @@ def process_add_transaction(
         unit_price=unit_price,
         total_amount=total_amount,
         payment_status=payment_status,
-        remarks=remarks
+        remarks=remarks,
     )
 
     # 3. Save it to the database
@@ -102,8 +108,8 @@ def process_add_transaction(
     session.commit()
 
     # 4. The 303 Redirect (Crucial UI/UX Step)
-    # Instead of showing a blank "Success" screen, a 303 redirect forces the 
-    # user's browser to immediately bounce back to the Home Page ('/') so 
+    # Instead of showing a blank "Success" screen, a 303 redirect forces the
+    # user's browser to immediately bounce back to the Home Page ('/') so
     # they can visually verify their new data appeared in the ledger.
     return RedirectResponse(url="/", status_code=303)
 

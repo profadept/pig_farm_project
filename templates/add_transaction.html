@@ -27,13 +27,22 @@
                     <div class="row mb-3">
                         <div class="col">
                             <label class="form-label">Category</label>
-                            <input type="text" class="form-control" name="category" placeholder="e.g., Feed, Sales, Medicine" required>
+                            <select class="form-select" name="category" required>
+                                <option value="Feed">Feed</option>
+                                <option value="Medicine">Medicine</option>
+                                <option value="Sales">Sales</option>
+                                <option value="Utilities">Utilities</option>
+                                <option value="Rent">Rent</option>
+                                <option value="Property">Property</option>
+                                <option value="Other">Other</option>
+                            </select>
                         </div>
                         <div class="col">
                             <label class="form-label">Payment Status</label>
                             <select class="form-select" name="payment_status" required>
                                 <option value="Paid">Paid</option>
-                                <option value="Pending">Pending</option>
+                                <option value="Unpaid">Unpaid</option>
+                                <option value="Partially Paid">Partially Paid</option>
                             </select>
                         </div>
                     </div>

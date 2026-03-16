@@ -19,10 +19,10 @@
                 {% for txn in transactions %}
                 <tr>
                     <td>{{ txn.txn_date }}</td>
-                    <td class="text-capitalize">{{ txn.category }}</td>
+                    <td class="text-capitalize">{{ txn.category.value }}</td>
                     <td>{{ txn.item_description }}</td>
-                    <td>${{ txn.total_amount }}</td>
-                    <td><span class="badge bg-success text-capitalize">{{ txn.payment_status }}</span></td>
+                    <td>₦{{ txn.total_amount }}</td>
+                    <td><span class="badge bg-success text-capitalize">{{ txn.payment_status.value }}</span></td>
                 </tr>
                 {% else %}
                 <tr>
