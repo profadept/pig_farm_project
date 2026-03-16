@@ -172,6 +172,76 @@ def read_ledger(
     )
 
 
+@app.get("/edit-transaction/{id}", response_class=HTMLResponse)
+def show_edit_transaction(
+    id: int, request: Request, session: Session = Depends(get_session)
+):
+    """
+    Step 1 of Editing: The GET Route
+
+    Extracts the unique ID from the URL, finds that specific record in Postgres,
+    and hands it to the edit form so Jinja2 can pre-fill the boxes.
+    """
+    # Grab the specific transaction
+    transaction = session.get(Transaction, id)
+
+    # Security check: What if they typed /edit-transaction/999 and it doesn't exist?
+    if not transaction:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+
+    return templates.TemplateResponse(
+        "edit_transaction.html", {"request": request, "transaction": transaction}
+    )
+
+
+@app.post("/edit-transaction/{id}", response_class=RedirectResponse)
+def process_edit_transaction(
+    id: int,
+    txn_date: date = Form(...),
+    txn_type: str = Form(...),
+    category: CategoryEnum = Form(...),
+    item_description: str = Form(...),
+    qty: float = Form(...),
+    unit_price: float = Form(...),
+    payment_status: StatusEnum = Form(...),
+    remarks: Optional[str] = Form(None),
+    session: Session = Depends(get_session),
+):
+    """
+    Step 2 of Editing: The POST Route
+
+    Catches the submitted form data, finds the original record,
+    overwrites the old data with the newly typed data, and saves it.
+    """
+    # 1. Find the original record
+    transaction = session.get(Transaction, id)
+    if not transaction:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+
+    # 2. Backend Security Check
+    if qty < 0 or unit_price < 0:
+        raise HTTPException(
+            status_code=400, detail="Quantity and Price cannot be negative."
+        )
+
+    # 3. Overwrite the old values with the new form values
+    transaction.txn_date = txn_date
+    transaction.txn_type = txn_type
+    transaction.category = category
+    transaction.item_description = item_description
+    transaction.qty = qty
+    transaction.unit_price = unit_price
+    transaction.total_amount = qty * unit_price  # Recalculate the math!
+    transaction.payment_status = payment_status
+    transaction.remarks = remarks
+
+    # 4. Save and redirect back to the Ledger page
+    session.add(transaction)
+    session.commit()
+
+    return RedirectResponse(url="/ledger", status_code=303)
+
+
 @app.post("/transactions/", response_model=Transaction)
 def create_transaction(
     transaction: Transaction, session: Session = Depends(get_session)
