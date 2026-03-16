@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2 class="mb-4">Accounting Ledger</h2>
+
+<div class="card shadow">
+    <div class="card-body">
+        <table class="table table-striped table-hover mb-0">
+            <thead class="table-dark">
+                <tr>
+                    <th>Date</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for txn in transactions %}
+                <tr>
+                    <td>{{ txn.txn_date }}</td>
+                    <td class="text-capitalize">{{ txn.category }}</td>
+                    <td>{{ txn.item_description }}</td>
+                    <td>${{ txn.total_amount }}</td>
+                    <td><span class="badge bg-success text-capitalize">{{ txn.payment_status }}</span></td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-4">
+                        No transactions found. Your ledger is empty!
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
