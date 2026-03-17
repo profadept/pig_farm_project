@@ -2,78 +2,169 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-8">
+    <div class="col-md-10">
         <div class="card shadow">
-            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
                 <h4 class="mb-0">✏️ Edit Transaction #{{ transaction.id }}</h4>
                 <a href="/ledger" class="btn btn-sm btn-light">Cancel</a>
             </div>
-            <div class="card-body">
+            <div class="card-body bg-light">
                 <form action="/edit-transaction/{{ transaction.id }}" method="post">
                     
+                    <h5 class="text-primary border-bottom pb-2">1. Core Details</h5>
                     <div class="row mb-3">
-                        <div class="col">
-                            <label class="form-label">Date</label>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Date</label>
                             <input type="date" class="form-control" name="txn_date" value="{{ transaction.txn_date }}" required>
                         </div>
-                        <div class="col">
-                            <label class="form-label">Transaction Type</label>
-                            <select class="form-select" name="txn_type" required>
-                                <option value="Expense" {% if transaction.txn_type == 'Expense' %}selected{% endif %}>Expense</option>
-                                <option value="Income" {% if transaction.txn_type == 'Income' %}selected{% endif %}>Income</option>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Type</label>
+                            <select class="form-select" name="txn_type" id="txn_type" required>
+                                <option value="Expense" {% if transaction.txn_type.value == 'Expense' %}selected{% endif %}>Expense</option>
+                                <option value="Income" {% if transaction.txn_type.value == 'Income' %}selected{% endif %}>Income</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Category</label>
+                            <select class="form-select" name="category" id="category" required>
+                                <option value="Livestock Sales" class="income-opt" {% if transaction.category.value == 'Livestock Sales' %}selected{% endif %}>Livestock Sales</option>
+                                <option value="Crop/Byproduct Sales" class="income-opt" {% if transaction.category.value == 'Crop/Byproduct Sales' %}selected{% endif %}>Crop/Byproduct Sales</option>
+                                <option value="Other Income" class="income-opt" {% if transaction.category.value == 'Other Income' %}selected{% endif %}>Other Income</option>
+                                
+                                <option value="Feed" class="expense-opt" {% if transaction.category.value == 'Feed' %}selected{% endif %}>Feed</option>
+                                <option value="Medicine & Vaccines" class="expense-opt" {% if transaction.category.value == 'Medicine & Vaccines' %}selected{% endif %}>Medicine & Vaccines</option>
+                                <option value="Labor" class="expense-opt" {% if transaction.category.value == 'Labor' %}selected{% endif %}>Labor</option>
+                                <option value="Assets & Equipment" class="expense-opt" {% if transaction.category.value == 'Assets & Equipment' %}selected{% endif %}>Assets & Equipment</option>
+                                <option value="Maintenance" class="expense-opt" {% if transaction.category.value == 'Maintenance' %}selected{% endif %}>Maintenance</option>
+                                <option value="Utilities" class="expense-opt" {% if transaction.category.value == 'Utilities' %}selected{% endif %}>Utilities</option>
+                                <option value="Consumables" class="expense-opt" {% if transaction.category.value == 'Consumables' %}selected{% endif %}>Consumables</option>
+                                <option value="Transport & Logistics" class="expense-opt" {% if transaction.category.value == 'Transport & Logistics' %}selected{% endif %}>Transport & Logistics</option>
+                                <option value="Other Expense" class="expense-opt" {% if transaction.category.value == 'Other Expense' %}selected{% endif %}>Other Expense</option>
                             </select>
                         </div>
                     </div>
 
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Item Description</label>
+                            <input type="text" class="form-control" name="item_description" value="{{ transaction.item_description }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Entity Name (Vendor/Customer)</label>
+                            <input type="text" class="form-control" name="entity_name" value="{{ transaction.entity_name or '' }}">
+                        </div>
+                    </div>
+
+                    <h5 class="text-primary border-bottom pb-2">2. Financial Metrics</h5>
                     <div class="row mb-3">
-                        <div class="col">
-                            <label class="form-label">Category</label>
-                            <select class="form-select" name="category" required>
-                                <option value="Feed" {% if transaction.category.value == 'Feed' %}selected{% endif %}>Feed</option>
-                                <option value="Medicine" {% if transaction.category.value == 'Medicine' %}selected{% endif %}>Medicine</option>
-                                <option value="Sales" {% if transaction.category.value == 'Sales' %}selected{% endif %}>Sales</option>
-                                <option value="Utilities" {% if transaction.category.value == 'Utilities' %}selected{% endif %}>Utilities</option>
-                                <option value="Rent" {% if transaction.category.value == 'Rent' %}selected{% endif %}>Rent</option>
-                                <option value="Property" {% if transaction.category.value == 'Property' %}selected{% endif %}>Property</option>
-                                <option value="Other" {% if transaction.category.value == 'Other' %}selected{% endif %}>Other</option>
-                                <option value="Transport" {% if transaction.category.value == 'Transport' %}selected{% endif %}>Transport</option>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Quantity</label>
+                            <input type="number" step="0.01" class="form-control math-input" name="qty" id="qty" value="{{ transaction.qty }}" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Unit of Measure</label>
+                            <select class="form-select" name="unit_of_measure" required>
+                                <option value="kg" {% if transaction.unit_of_measure.value == 'kg' %}selected{% endif %}>kg</option>
+                                <option value="Liters" {% if transaction.unit_of_measure.value == 'Liters' %}selected{% endif %}>Liters</option>
+                                <option value="Head" {% if transaction.unit_of_measure.value == 'Head' %}selected{% endif %}>Head</option>
+                                <option value="Month" {% if transaction.unit_of_measure.value == 'Month' %}selected{% endif %}>Month</option>
+                                <option value="Day" {% if transaction.unit_of_measure.value == 'Day' %}selected{% endif %}>Day</option>
+                                <option value="Job/Item" {% if transaction.unit_of_measure.value == 'Job/Item' %}selected{% endif %}>Job / Item</option>
+                                <option value="Other" {% if transaction.unit_of_measure.value == 'Other' %}selected{% endif %}>Other</option>
                             </select>
                         </div>
-                        <div class="col">
-                            <label class="form-label">Payment Status</label>
-                            <select class="form-select" name="payment_status" required>
-                                <option value="Paid" {% if transaction.payment_status.value == 'Paid' %}selected{% endif %}>Paid</option>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Unit Price (₦)</label>
+                            <input type="number" step="0.01" class="form-control math-input" name="unit_price" id="unit_price" value="{{ transaction.unit_price }}" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold text-success">Total Amount (₦)</label>
+                            <input type="number" class="form-control bg-white text-success fw-bold" id="total_amount_display" readonly>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4 bg-white p-3 border rounded">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-danger">Amount Paid Today (₦)</label>
+                            <input type="number" step="0.01" class="form-control math-input border-danger" name="amount_paid" id="amount_paid" value="{{ transaction.amount_paid }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Payment Status</label>
+                            <select class="form-select bg-light" name="payment_status" id="payment_status" style="pointer-events: none;" required>
                                 <option value="Unpaid" {% if transaction.payment_status.value == 'Unpaid' %}selected{% endif %}>Unpaid</option>
                                 <option value="Partially Paid" {% if transaction.payment_status.value == 'Partially Paid' %}selected{% endif %}>Partially Paid</option>
+                                <option value="Paid" {% if transaction.payment_status.value == 'Paid' %}selected{% endif %}>Paid</option>
                             </select>
+                            <small class="text-muted">Auto-calculated based on Amount Paid</small>
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Item Description</label>
-                        <input type="text" class="form-control" name="item_description" value="{{ transaction.item_description }}" required>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col">
-                            <label class="form-label">Quantity</label>
-                            <input type="number" step="0.01" min="0" class="form-control" name="qty" value="{{ transaction.qty }}" required>
+                    <h5 class="text-primary border-bottom pb-2">3. Database Links & Notes</h5>
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Reference Tag</label>
+                            <input type="text" class="form-control" name="reference_tag" value="{{ transaction.reference_tag or '' }}">
                         </div>
-                        <div class="col">
-                            <label class="form-label">Unit Price (₦)</label>
-                            <input type="number" step="0.01" min="0" class="form-control" name="unit_price" value="{{ transaction.unit_price }}" required>
+                        <div class="col-md-8">
+                            <label class="form-label fw-bold">Remarks (Optional)</label>
+                            <input type="text" class="form-control" name="remarks" value="{{ transaction.remarks or '' }}">
                         </div>
                     </div>
 
-                    <div class="mb-4">
-                        <label class="form-label">Remarks (Optional)</label>
-                        <textarea class="form-control" name="remarks" rows="2">{% if transaction.remarks %}{{ transaction.remarks }}{% endif %}</textarea>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary w-100">Save Changes</button>
+                    <button type="submit" class="btn btn-warning btn-lg w-100 shadow-sm">🔄 Update Transaction</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    const typeSelect = document.getElementById('txn_type');
+    const categorySelect = document.getElementById('category');
+    const qtyInput = document.getElementById('qty');
+    const priceInput = document.getElementById('unit_price');
+    const totalDisplay = document.getElementById('total_amount_display');
+    const paidInput = document.getElementById('amount_paid');
+    const statusSelect = document.getElementById('payment_status');
+
+    // Filter Categories based on Type
+    function updateCategories() {
+        const isIncome = typeSelect.value === 'Income';
+        document.querySelectorAll('.income-opt').forEach(opt => opt.style.display = isIncome ? 'block' : 'none');
+        document.querySelectorAll('.expense-opt').forEach(opt => opt.style.display = isIncome ? 'none' : 'block');
+    }
+
+    // Math Engine
+    function calculateMath() {
+        const qty = parseFloat(qtyInput.value) || 0;
+        const price = parseFloat(priceInput.value) || 0;
+        const paid = parseFloat(paidInput.value) || 0;
+
+        const total = qty * price;
+        totalDisplay.value = total.toFixed(2);
+
+        if (paid === 0 && total > 0) {
+            statusSelect.value = "Unpaid";
+        } else if (paid > 0 && paid < total) {
+            statusSelect.value = "Partially Paid";
+        } else if (paid >= total && total > 0) {
+            statusSelect.value = "Paid";
+        } else {
+            statusSelect.value = "Unpaid";
+        }
+    }
+
+    // Event Listeners
+    typeSelect.addEventListener('change', function() {
+        updateCategories();
+        categorySelect.value = typeSelect.value === 'Income' ? 'Livestock Sales' : 'Feed';
+    });
+    qtyInput.addEventListener('input', calculateMath);
+    priceInput.addEventListener('input', calculateMath);
+    paidInput.addEventListener('input', calculateMath);
+
+    // Initialize on page load so pre-filled data is handled correctly
+    updateCategories();
+    calculateMath();
+</script>
 {% endblock %}

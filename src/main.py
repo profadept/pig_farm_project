@@ -125,7 +125,8 @@ def process_add_transaction(
     # Issue a redirect response to improve user experience
     # Instead of showing a blank success screen, this bounces the user
     # directly back to the main dashboard so they can visually verify their entry.
-    return RedirectResponse(url="/", status_code=303)
+    # 4. The 303 Redirect (Now with a success message flag!)
+    return RedirectResponse(url="/?msg=saved", status_code=303)
 
 
 @app.get("/ledger", response_class=HTMLResponse)
@@ -211,12 +212,16 @@ def show_edit_transaction(
 def process_edit_transaction(
     id: int,
     txn_date: date = Form(...),
-    txn_type: str = Form(...),
+    txn_type: TransactionTypeEnum = Form(...),
     category: CategoryEnum = Form(...),
     item_description: str = Form(...),
     qty: float = Form(...),
+    unit_of_measure: UnitOfMeasureEnum = Form(...),
     unit_price: float = Form(...),
+    amount_paid: float = Form(...),
     payment_status: StatusEnum = Form(...),
+    entity_name: Optional[str] = Form(None),
+    reference_tag: Optional[str] = Form(None),
     remarks: Optional[str] = Form(None),
     session: Session = Depends(get_session),
 ):
@@ -224,7 +229,7 @@ def process_edit_transaction(
     Step 2 of Editing: The POST Route
 
     Catches the submitted form data, finds the original record,
-    overwrites the old data with the newly typed data, and saves it.
+    overwrites the old data with the newly typed V2 architecture data, and saves it.
     """
     # 1. Find the original record
     transaction = session.get(Transaction, id)
@@ -232,9 +237,9 @@ def process_edit_transaction(
         raise HTTPException(status_code=404, detail="Transaction not found")
 
     # 2. Backend Security Check
-    if qty < 0 or unit_price < 0:
+    if qty < 0 or unit_price < 0 or amount_paid < 0:
         raise HTTPException(
-            status_code=400, detail="Quantity and Price cannot be negative."
+            status_code=400, detail="Financial values cannot be negative."
         )
 
     # 3. Overwrite the old values with the new form values
@@ -243,16 +248,19 @@ def process_edit_transaction(
     transaction.category = category
     transaction.item_description = item_description
     transaction.qty = qty
+    transaction.unit_of_measure = unit_of_measure
     transaction.unit_price = unit_price
-    transaction.total_amount = qty * unit_price  # Recalculate the math!
+    transaction.total_amount = qty * unit_price  # Recalculate securely!
+    transaction.amount_paid = amount_paid
     transaction.payment_status = payment_status
+    transaction.entity_name = entity_name
+    transaction.reference_tag = reference_tag
     transaction.remarks = remarks
 
-    # 4. Save and redirect back to the Ledger page
+    # 4. Save and redirect back to the Ledger page with an edit flag
     session.add(transaction)
     session.commit()
-
-    return RedirectResponse(url="/ledger", status_code=303)
+    return RedirectResponse(url="/ledger?msg=edited", status_code=303)
 
 
 @app.get("/transaction/{id}", response_class=HTMLResponse)
@@ -284,9 +292,8 @@ def delete_transaction(id: int, session: Session = Depends(get_session)):
 
     session.delete(transaction)
     session.commit()
-
-    # 303 Redirect forces the browser back to the Ledger
-    return RedirectResponse(url="/ledger", status_code=303)
+    # Redirect back to the Ledger with a delete flag
+    return RedirectResponse(url="/ledger?msg=deleted", status_code=303)
 
 
 @app.post("/transactions/", response_model=Transaction)

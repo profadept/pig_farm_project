@@ -2,65 +2,109 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card shadow">
-            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
-                <h4 class="mb-0">📄 Transaction Details</h4>
-                <a href="/ledger" class="btn btn-sm btn-light">Back to Ledger</a>
+    <div class="col-md-8">
+        
+        <div class="d-flex justify-content-between mb-3">
+            <a href="/ledger" class="btn btn-outline-secondary shadow-sm">← Back to Ledger</a>
+            <div>
+                <a href="/edit-transaction/{{ transaction.id }}" class="btn btn-warning shadow-sm me-2">✏️ Edit</a>
+                
+                <button type="button" class="btn btn-danger shadow-sm" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                    🗑️ Delete
+                </button>
             </div>
-            <div class="card-body">
+        </div>
+
+        <div class="card shadow border-0">
+            <div class="card-header bg-dark text-white text-center py-4">
+                <h6 class="text-uppercase text-muted mb-1">Transaction Receipt</h6>
+                <h3 class="mb-0">#{{ transaction.id }}</h3>
+                <p class="mb-0 text-light">{{ transaction.txn_date }}</p>
+            </div>
+
+            <div class="card-body p-5">
                 
-                <h2 class="text-center mb-4">₦{{ transaction.total_amount }}</h2>
-                
-                <table class="table table-bordered">
-                    <tbody>
-                        <tr>
-                            <th class="bg-light" style="width: 40%;">Transaction ID</th>
-                            <td>#{{ transaction.id }}</td>
-                        </tr>
-                        <tr>
-                            <th class="bg-light">Date</th>
-                            <td>{{ transaction.txn_date }}</td>
-                        </tr>
-                        <tr>
-                            <th class="bg-light">Type</th>
-                            <td>{{ transaction.txn_type }}</td>
-                        </tr>
-                        <tr>
-                            <th class="bg-light">Category</th>
-                            <td class="text-capitalize">{{ transaction.category.value }}</td>
-                        </tr>
-                        <tr>
-                            <th class="bg-light">Description</th>
-                            <td>{{ transaction.item_description }}</td>
-                        </tr>
-                        <tr>
-                            <th class="bg-light">Math Breakdown</th>
-                            <td>{{ transaction.qty }} units @ ₦{{ transaction.unit_price }} each</td>
-                        </tr>
-                        <tr>
-                            <th class="bg-light">Status</th>
-                            <td>
-                                {% if transaction.payment_status.value == 'Paid' %}
-                                    <span class="badge bg-success">Paid</span>
-                                {% elif transaction.payment_status.value == 'Unpaid' %}
-                                    <span class="badge bg-danger">Unpaid</span>
-                                {% else %}
-                                    <span class="badge bg-warning text-dark">Partially Paid</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        <tr>
-                            <th class="bg-light">Remarks</th>
-                            <td>{{ transaction.remarks or 'N/A' }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-                
-                <div class="d-flex justify-content-center mt-4 gap-2">
-                    <a href="/edit-transaction/{{ transaction.id }}" class="btn btn-primary">Edit Record</a>
+                <div class="row mb-4 border-bottom pb-4">
+                    <div class="col-sm-6">
+                        <p class="text-muted mb-1 text-uppercase small fw-bold">Type / Category</p>
+                        <h5 class="mb-0">
+                            {% if transaction.txn_type.value == 'Income' %}
+                                <span class="text-success">↗</span>
+                            {% else %}
+                                <span class="text-danger">↘</span>
+                            {% endif %}
+                            {{ transaction.category.value }}
+                        </h5>
+                    </div>
+                    <div class="col-sm-6 text-sm-end mt-3 mt-sm-0">
+                        <p class="text-muted mb-1 text-uppercase small fw-bold">Entity (Vendor/Customer)</p>
+                        <h5 class="mb-0">{{ transaction.entity_name or 'N/A' }}</h5>
+                    </div>
                 </div>
 
+                <div class="bg-light p-4 rounded mb-4">
+                    <h6 class="text-muted mb-3 text-uppercase small fw-bold border-bottom pb-2">Item Details</h6>
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="fw-bold">{{ transaction.item_description }}</span>
+                        <span>{{ transaction.qty }} {{ transaction.unit_of_measure.value }} @ ₦{{ "{:,.2f}".format(transaction.unit_price) }}</span>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                        <span class="fs-5 fw-bold text-dark">Total Amount</span>
+                        <span class="fs-5 fw-bold text-dark">₦{{ "{:,.2f}".format(transaction.total_amount) }}</span>
+                    </div>
+                </div>
+
+                <div class="row align-items-center mb-4">
+                    <div class="col-6">
+                        <p class="text-muted mb-1 text-uppercase small fw-bold">Amount Paid</p>
+                        <h4 class="text-success mb-0">₦{{ "{:,.2f}".format(transaction.amount_paid) }}</h4>
+                    </div>
+                    <div class="col-6 text-end">
+                        {% if transaction.payment_status.value == 'Paid' %}
+                            <span class="badge bg-success fs-5 px-3 py-2">FULLY PAID</span>
+                        {% elif transaction.payment_status.value == 'Partially Paid' %}
+                            <span class="badge bg-warning text-dark fs-5 px-3 py-2">PARTIAL PAYMENT</span>
+                        {% else %}
+                            <span class="badge bg-danger fs-5 px-3 py-2">UNPAID</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if transaction.reference_tag or transaction.remarks %}
+                <div class="border-top pt-4">
+                    <p class="text-muted mb-1 text-uppercase small fw-bold">Notes & Tags</p>
+                    {% if transaction.reference_tag %}
+                        <p class="mb-1"><strong>Ref:</strong> <span class="badge bg-secondary">{{ transaction.reference_tag }}</span></p>
+                    {% endif %}
+                    {% if transaction.remarks %}
+                        <p class="mb-0 text-muted fst-italic">"{{ transaction.remarks }}"</p>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">⚠️ Confirm Deletion</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to permanently delete Transaction <strong>#{{ transaction.id }}</strong>?</p>
+                <p class="text-danger small mb-0">This action cannot be undone and will affect your Pandas analytics.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="/delete-transaction/{{ transaction.id }}" method="post">
+                    <button type="submit" class="btn btn-danger">Yes, Delete It</button>
+                </form>
             </div>
         </div>
     </div>
