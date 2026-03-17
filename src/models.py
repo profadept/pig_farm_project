@@ -26,6 +26,7 @@ class CategoryEnum(str, Enum):
     medicine = "Medicine & Vaccines"
     labor = "Labor"
     assets = "Assets & Equipment"
+    livestock_purchases = "Livestock Purchases"
     maintenance = "Maintenance"
     utilities = "Utilities"
     consumables = "Consumables"
@@ -43,6 +44,8 @@ class UnitOfMeasureEnum(str, Enum):
     day = "Day"
     job = "Job/Item"
     other = "Other"
+    ml = "ml"
+    grams = "grams"
 
 
 class StatusEnum(str, Enum):

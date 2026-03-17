@@ -35,7 +35,7 @@
                                 <option value="Medicine & Vaccines" class="expense-opt" {% if transaction.category.value == 'Medicine & Vaccines' %}selected{% endif %}>Medicine & Vaccines</option>
                                 <option value="Labor" class="expense-opt" {% if transaction.category.value == 'Labor' %}selected{% endif %}>Labor</option>
                                 <option value="Assets & Equipment" class="expense-opt" {% if transaction.category.value == 'Assets & Equipment' %}selected{% endif %}>Assets & Equipment</option>
-                                <option value="Maintenance" class="expense-opt" {% if transaction.category.value == 'Maintenance' %}selected{% endif %}>Maintenance</option>
+                                <option value="Livestock Purchases" class="expense-opt" {% if transaction.category.value == 'Livestock Purchases' %}selected{% endif %}>Livestock Purchases</option> <option value="Maintenance" class="expense-opt" {% if transaction.category.value == 'Maintenance' %}selected{% endif %}>Maintenance</option>
                                 <option value="Utilities" class="expense-opt" {% if transaction.category.value == 'Utilities' %}selected{% endif %}>Utilities</option>
                                 <option value="Consumables" class="expense-opt" {% if transaction.category.value == 'Consumables' %}selected{% endif %}>Consumables</option>
                                 <option value="Transport & Logistics" class="expense-opt" {% if transaction.category.value == 'Transport & Logistics' %}selected{% endif %}>Transport & Logistics</option>
@@ -66,7 +66,7 @@
                             <select class="form-select" name="unit_of_measure" required>
                                 <option value="kg" {% if transaction.unit_of_measure.value == 'kg' %}selected{% endif %}>kg</option>
                                 <option value="Liters" {% if transaction.unit_of_measure.value == 'Liters' %}selected{% endif %}>Liters</option>
-                                <option value="Head" {% if transaction.unit_of_measure.value == 'Head' %}selected{% endif %}>Head</option>
+                                <option value="ml" {% if transaction.unit_of_measure.value == 'ml' %}selected{% endif %}>ml</option> <option value="grams" {% if transaction.unit_of_measure.value == 'grams' %}selected{% endif %}>grams</option> <option value="Head" {% if transaction.unit_of_measure.value == 'Head' %}selected{% endif %}>Head</option>
                                 <option value="Month" {% if transaction.unit_of_measure.value == 'Month' %}selected{% endif %}>Month</option>
                                 <option value="Day" {% if transaction.unit_of_measure.value == 'Day' %}selected{% endif %}>Day</option>
                                 <option value="Job/Item" {% if transaction.unit_of_measure.value == 'Job/Item' %}selected{% endif %}>Job / Item</option>

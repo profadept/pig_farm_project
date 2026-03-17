@@ -27,7 +27,7 @@ services:
     env_file:
       - .env
     environment:
-      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+      - DATABASE_URL=postgresql+psycopg://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
     ports:
       - "8000:8000"
     depends_on:
