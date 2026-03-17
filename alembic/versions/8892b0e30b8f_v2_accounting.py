@@ -1,8 +1,8 @@
-"""implement farm_transaction and enums
+"""v2_accounting
 
-Revision ID: e403293e8e87
-Revises: bfd38c6f8297
-Create Date: 2026-03-16 14:27:39.242970
+Revision ID: 8892b0e30b8f
+Revises:
+Create Date: 2026-03-17 12:51:04.271916
 
 """
 
@@ -12,10 +12,9 @@ from alembic import op
 import sqlalchemy as sa
 import sqlmodel
 
-
 # revision identifiers, used by Alembic.
-revision: str = "e403293e8e87"
-down_revision: Union[str, Sequence[str], None] = "bfd38c6f8297"
+revision: str = "8892b0e30b8f"
+down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -27,18 +26,26 @@ def upgrade() -> None:
         "farm_transactions",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("txn_date", sa.Date(), nullable=False),
-        sa.Column("txn_type", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column(
+            "txn_type",
+            sa.Enum("income", "expense", name="transactiontypeenum"),
+            nullable=False,
+        ),
         sa.Column(
             "category",
             sa.Enum(
+                "livestock_sales",
+                "byproduct_sales",
+                "other_income",
                 "feed",
                 "medicine",
-                "sales",
-                "utilities",
-                "rent",
-                "property",
-                "other",
                 "labor",
+                "assets",
+                "maintenance",
+                "utilities",
+                "consumables",
+                "transport",
+                "other_expense",
                 name="categoryenum",
             ),
             nullable=False,
@@ -47,13 +54,30 @@ def upgrade() -> None:
             "item_description", sqlmodel.sql.sqltypes.AutoString(), nullable=False
         ),
         sa.Column("qty", sa.Float(), nullable=False),
+        sa.Column(
+            "unit_of_measure",
+            sa.Enum(
+                "kg",
+                "liters",
+                "head",
+                "month",
+                "day",
+                "job",
+                "other",
+                name="unitofmeasureenum",
+            ),
+            nullable=False,
+        ),
         sa.Column("unit_price", sa.Float(), nullable=False),
         sa.Column("total_amount", sa.Float(), nullable=False),
+        sa.Column("amount_paid", sa.Float(), nullable=False),
         sa.Column(
             "payment_status",
             sa.Enum("paid", "unpaid", "partially_paid", name="statusenum"),
             nullable=False,
         ),
+        sa.Column("entity_name", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+        sa.Column("reference_tag", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.Column("remarks", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
     )
