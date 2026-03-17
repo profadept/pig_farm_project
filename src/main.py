@@ -7,7 +7,13 @@ from typing import Optional
 
 
 from src.database import engine
-from src.models import Transaction, CategoryEnum, StatusEnum
+from src.models import (
+    Transaction,
+    CategoryEnum,
+    StatusEnum,
+    UnitOfMeasureEnum,
+    TransactionTypeEnum,
+)
 
 
 # The Boss: Now with professional metadata for your documentation
@@ -64,54 +70,61 @@ def show_add_transaction(request: Request):
 @app.post("/add-transaction", response_class=RedirectResponse)
 def process_add_transaction(
     txn_date: date = Form(...),
-    txn_type: str = Form(...),
+    txn_type: TransactionTypeEnum = Form(...),
     category: CategoryEnum = Form(...),
     item_description: str = Form(...),
     qty: float = Form(...),
+    unit_of_measure: UnitOfMeasureEnum = Form(...),
     unit_price: float = Form(...),
+    amount_paid: float = Form(...),
     payment_status: StatusEnum = Form(...),
-    remarks: str = Form(None),
+    entity_name: Optional[str] = Form(None),
+    reference_tag: Optional[str] = Form(None),
+    remarks: Optional[str] = Form(None),
     session: Session = Depends(get_session),
 ):
     """
-    Intercepts the HTML form submission, saves the data, and redirects the user.
-
-    Why we use Form(...):
-    Unlike JSON APIs, HTML forms send data as 'x-www-form-urlencoded'.
-    The Form() tool tells FastAPI to look for those specific 'name' attributes
-    from the HTML inputs.
+    Intercepts the HTML form submission, validates the financial metrics securely
+    on the backend, and commits the new transaction to the PostgreSQL ledger.
     """
 
-    # Backend Security Check (In case they bypass the HTML form)
-    if qty < 0 or unit_price < 0:
+    # Prevent negative inputs from corrupting the financial data
+    # Hackers or accidental typos could bypass the HTML frontend restrictions,
+    # so we enforce a hard security wall here on the server side.
+    if qty < 0 or unit_price < 0 or amount_paid < 0:
         raise HTTPException(
-            status_code=400, detail="Quantity and Price cannot be negative."
+            status_code=400, detail="Financial values cannot be negative."
         )
 
-    # 1. Calculate the Data Science Math (Total Amount) automatically!
+    # Calculate the total amount securely on the backend
+    # We never trust the frontend to send the total amount. By calculating it
+    # here in Python, we guarantee the math is absolutely flawless for Pandas.
     total_amount = qty * unit_price
 
-    # 2. Build the exact blueprint expected by Postgres
+    # Map the validated form data to our strict database blueprint
     new_transaction = Transaction(
         txn_date=txn_date,
         txn_type=txn_type,
         category=category,
         item_description=item_description,
         qty=qty,
+        unit_of_measure=unit_of_measure,
         unit_price=unit_price,
         total_amount=total_amount,
+        amount_paid=amount_paid,
         payment_status=payment_status,
+        entity_name=entity_name,
+        reference_tag=reference_tag,
         remarks=remarks,
     )
 
-    # 3. Save it to the database
+    # Lock the transaction into the database vault
     session.add(new_transaction)
     session.commit()
 
-    # 4. The 303 Redirect (Crucial UI/UX Step)
-    # Instead of showing a blank "Success" screen, a 303 redirect forces the
-    # user's browser to immediately bounce back to the Home Page ('/') so
-    # they can visually verify their new data appeared in the ledger.
+    # Issue a redirect response to improve user experience
+    # Instead of showing a blank success screen, this bounces the user
+    # directly back to the main dashboard so they can visually verify their entry.
     return RedirectResponse(url="/", status_code=303)
 
 
