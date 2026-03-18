@@ -26,21 +26,21 @@
                     <select class="form-select" name="category">
                         <option value="">-- All Categories --</option>
                         <optgroup label="Income">
-                            <option value="Livestock Sales" {% if request.query_params.get('category') == 'Livestock Sales' %}selected{% endif %}>Livestock Sales</option>
-                            <option value="Crop/Byproduct Sales" {% if request.query_params.get('category') == 'Crop/Byproduct Sales' %}selected{% endif %}>Crop/Byproduct Sales</option>
-                            <option value="Other Income" {% if request.query_params.get('category') == 'Other Income' %}selected{% endif %}>Other Income</option>
+                            <option value="livestock_sales" {% if request.query_params.get('category') == 'livestock_sales' %}selected{% endif %}>Livestock Sales</option>
+                            <option value="crop_sales" {% if request.query_params.get('category') == 'crop_sales' %}selected{% endif %}>Crop/Byproduct Sales</option>
+                            <option value="other_income" {% if request.query_params.get('category') == 'other_income' %}selected{% endif %}>Other Income</option>
                         </optgroup>
                         <optgroup label="Expense">
-                            <option value="Feed" {% if request.query_params.get('category') == 'Feed' %}selected{% endif %}>Feed</option>
-                            <option value="Medicine & Vaccines" {% if request.query_params.get('category') == 'Medicine & Vaccines' %}selected{% endif %}>Medicine & Vaccines</option>
-                            <option value="Labor" {% if request.query_params.get('category') == 'Labor' %}selected{% endif %}>Labor</option>
-                            <option value="Assets & Equipment" {% if request.query_params.get('category') == 'Assets & Equipment' %}selected{% endif %}>Assets & Equipment</option>
-                            <option value="Livestock Purchases" {% if request.query_params.get('category') == 'Livestock Purchases' %}selected{% endif %}>Livestock Purchases</option>
-                            <option value="Maintenance" {% if request.query_params.get('category') == 'Maintenance' %}selected{% endif %}>Maintenance</option>
-                            <option value="Utilities" {% if request.query_params.get('category') == 'Utilities' %}selected{% endif %}>Utilities</option>
-                            <option value="Consumables" {% if request.query_params.get('category') == 'Consumables' %}selected{% endif %}>Consumables</option>
-                            <option value="Transport & Logistics" {% if request.query_params.get('category') == 'Transport & Logistics' %}selected{% endif %}>Transport & Logistics</option>
-                            <option value="Other Expense" {% if request.query_params.get('category') == 'Other Expense' %}selected{% endif %}>Other Expense</option>
+                            <option value="feed" {% if request.query_params.get('category') == 'feed' %}selected{% endif %}>Feed</option>
+                            <option value="medicine" {% if request.query_params.get('category') == 'medicine' %}selected{% endif %}>Medicine & Vaccines</option>
+                            <option value="labor" {% if request.query_params.get('category') == 'labor' %}selected{% endif %}>Labor</option>
+                            <option value="assets" {% if request.query_params.get('category') == 'assets' %}selected{% endif %}>Assets & Equipment</option>
+                            <option value="livestock_purchases" {% if request.query_params.get('category') == 'livestock_purchases' %}selected{% endif %}>Livestock Purchases</option>
+                            <option value="maintenance" {% if request.query_params.get('category') == 'maintenance' %}selected{% endif %}>Maintenance</option>
+                            <option value="utilities" {% if request.query_params.get('category') == 'utilities' %}selected{% endif %}>Utilities</option>
+                            <option value="consumables" {% if request.query_params.get('category') == 'consumables' %}selected{% endif %}>Consumables</option>
+                            <option value="transport" {% if request.query_params.get('category') == 'transport' %}selected{% endif %}>Transport & Logistics</option>
+                            <option value="other_expense" {% if request.query_params.get('category') == 'other_expense' %}selected{% endif %}>Other Expense</option>
                         </optgroup>
                     </select>
                 </div>
@@ -49,8 +49,8 @@
                     <label class="form-label fw-bold text-secondary small">Payment Status</label>
                     <select class="form-select" name="payment_status">
                         <option value="">-- All Statuses --</option>
-                        <option value="Paid" {% if request.query_params.get('payment_status') == 'Paid' %}selected{% endif %}>Paid</option>
-                        <option value="Partially Paid" {% if request.query_params.get('payment_status') == 'Partially Paid' %}selected{% endif %}>Partially Paid</option>
+                        <option value="Full" {% if request.query_params.get('payment_status') == 'Full' %}selected{% endif %}>Paid in Full</option>
+                        <option value="Part" {% if request.query_params.get('payment_status') == 'Part' %}selected{% endif %}>Partially Paid</option>
                         <option value="Unpaid" {% if request.query_params.get('payment_status') == 'Unpaid' %}selected{% endif %}>Unpaid</option>
                     </select>
                 </div>
@@ -65,15 +65,8 @@
 
 <div class="card shadow-sm border-0">
     <div class="card-body p-0">
-        
-        {% if not has_searched %}
-            <div class="text-center py-5">
-                <div class="fs-1 mb-3">🗄️</div>
-                <h4 class="text-secondary">Your Data Vault is ready.</h4>
-                <p class="text-muted">Use the search filters above to pull specific transaction histories.</p>
-            </div>
             
-        {% elif transactions|length == 0 %}
+        {% if transactions|length == 0 %}
             <div class="text-center py-5">
                 <div class="fs-1 mb-3">👻</div>
                 <h4 class="text-secondary">No matching records found.</h4>
@@ -96,33 +89,49 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for txn in transactions %}
+                        {% for transaction in transactions %}
                         <tr>
-                            <td class="ps-3 fw-medium text-nowrap">{{ txn.txn_date }}</td>
+                            <td>{{ transaction.txn_date }}</td>
+                            
                             <td>
-                                <span class="badge {% if txn.txn_type.value == 'Income' %}bg-success{% else %}bg-danger{% endif %} bg-opacity-10 text-dark border">
-                                    {{ txn.category.value }}
-                                </span>
+                                <span class="badge bg-secondary">{{ transaction.category.value if transaction.category else transaction.category }}</span>
                             </td>
+                            
                             <td>
-                                <strong>{{ txn.item_description }}</strong><br>
-                                <small class="text-muted">{{ txn.entity_name or 'No entity listed' }}</small>
+                                <strong>{{ transaction.item_description }}</strong><br>
+                                <small class="text-muted">{{ transaction.entity_name }}</small>
                             </td>
-                            <td>{{ txn.qty }} <small class="text-muted">{{ txn.unit_of_measure.value }}</small></td>
-                            <td class="fw-bold">₦{{ "{:,.2f}".format(txn.total_amount) }}</td>
-                            <td class="text-success fw-medium">₦{{ "{:,.2f}".format(txn.amount_paid) }}</td>
+                            
+                            <td>{{ transaction.qty }} {{ transaction.unit_of_measure.value if transaction.unit_of_measure else transaction.unit_of_measure }}</td>
+                            
+                            <td>₦{{ transaction.total_amount }}</td>
+                            
                             <td>
-                                {% if txn.payment_status.value == 'Paid' %}
-                                    <span class="badge bg-success">Paid</span>
-                                {% elif txn.payment_status.value == 'Partially Paid' %}
-                                    <span class="badge bg-warning text-dark">Partial</span>
+                                {% if transaction.payment_status == 'Full' %}
+                                    <span class="badge bg-success">Full</span>
+                                {% elif transaction.payment_status == 'Part' %}
+                                    <span class="badge bg-warning text-dark">Part</span>
                                 {% else %}
                                     <span class="badge bg-danger">Unpaid</span>
                                 {% endif %}
                             </td>
-                            <td class="text-end pe-3 text-nowrap">
-                                <a href="/transaction/{{ txn.id }}" class="btn btn-sm btn-outline-info" title="View Digital Receipt">👁️</a>
-                                <a href="/edit-transaction/{{ txn.id }}" class="btn btn-sm btn-outline-secondary" title="Edit Data">✏️</a>
+                            
+                            <td>
+                                <div class="btn-group shadow-sm" role="group">
+                                    <a href="/transaction/{{ transaction.id }}" class="btn btn-sm btn-outline-info" title="View Receipt">
+                                        👁️ View
+                                    </a>
+                                    <a href="/edit-transaction/{{ transaction.id }}" class="btn btn-sm btn-outline-primary" title="Edit Record">
+                                        ✏️ Edit
+                                    </a>
+                                </div>
+                            </td>
+
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4">
+                                <h5 class="text-muted">No transactions found matching your search.</h5>
                             </td>
                         </tr>
                         {% endfor %}
@@ -133,19 +142,43 @@
     </div>
 </div>
 <script>
-    // The "Smart Memory" Engine
+    // The "Smart Memory" Engine V2
     const currentSearch = window.location.search;
     
     if (currentSearch) {
-        // If the URL has search filters, save them to temporary memory
-        sessionStorage.setItem('lastLedgerSearch', currentSearch);
+        // 1. Break the URL down to inspect the actual values
+        const params = new URLSearchParams(currentSearch);
+        let hasRealData = false;
+        
+        // 2. Loop through every filter to see if the user actually selected something
+        for (let [key, value] of params.entries()) {
+            if (value.trim() !== '') {
+                hasRealData = true;
+                break; // We found real data, stop looking!
+            }
+        }
+
+        // 3. Make the Smart Decision
+        if (hasRealData) {
+            // They actually filtered something. Save it!
+            sessionStorage.setItem('lastLedgerSearch', currentSearch);
+        } else {
+            // They submitted an empty form. Clear the memory!
+            sessionStorage.removeItem('lastLedgerSearch');
+            
+            // UI Polish: Magically erase the ugly "?start_date=&..." from the address bar 
+            // without reloading the page!
+            window.history.replaceState({}, document.title, "/ledger");
+        }
+        
     } else {
-        // If the URL is blank, check if we have a saved search in memory
+        // 4. The URL is completely blank. Check memory for a previous session.
         const savedSearch = sessionStorage.getItem('lastLedgerSearch');
         if (savedSearch) {
-            // Instantly redirect back to the saved filters!
+            // Memory found! Instantly restore their previous filters.
             window.location.replace('/ledger' + savedSearch);
         }
     }
 </script>
+
 {% endblock %}

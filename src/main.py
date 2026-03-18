@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request, Depends, Form, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlmodel import Session, select
-from datetime import date
+from datetime import date, datetime
 from typing import Optional
 
 
@@ -146,43 +146,31 @@ def read_ledger(
     """
 
     # Check if the user actually clicked 'Filter' with data
-    user_provided_filters = any([start_date, end_date, category, payment_status])
+    query = select(Transaction)
 
-    if not user_provided_filters:
-        # If no filters, don't even bother asking Postgres. Just return empty.
-        transactions = []
-        has_searched = False
-    else:
-        # If they did search, build the dynamic query
-        has_searched = True
+    if start_date and start_date.strip() != "":
+        # Convert the string to a real PostgreSQL-friendly Date object
+        parsed_start = datetime.strptime(start_date, "%Y-%m-%d").date()
+        query = query.where(Transaction.txn_date >= parsed_start)
 
-        # The base query (grab everything, newest first)
-        statement = select(Transaction).order_by(Transaction.txn_date.desc())
+    # 3. Safely handle the end_date
+    if end_date and end_date.strip() != "":
+        parsed_end = datetime.strptime(end_date, "%Y-%m-%d").date()
+        query = query.where(Transaction.txn_date <= parsed_end)
 
-        # 2. Dynamically stack the filters (The "Mix and Match" Logic)
-        if start_date:
-            statement = statement.where(Transaction.txn_date >= start_date)
+    # 4. Safely handle Category and Status (ignoring empty strings)
+    if category and category.strip() != "":
+        query = query.where(Transaction.category == category)
 
-        if end_date:
-            statement = statement.where(Transaction.txn_date <= end_date)
+    if payment_status and payment_status.strip() != "":
+        query = query.where(Transaction.payment_status == payment_status)
 
-        if category:
-            statement = statement.where(Transaction.category == category)
+    # 5. Execute the final query
+    transactions = session.exec(query.order_by(Transaction.txn_date.desc())).all()
+    print(f"======== DEBUG: Python found {len(transactions)} rows! ========")
 
-        if payment_status:
-            statement = statement.where(Transaction.payment_status == payment_status)
-
-        # 3. Execute the final, customized query
-        transactions = session.exec(statement).all()
-
-        # 4. Hand the exact filtered results to the ledger.html page
     return templates.TemplateResponse(
-        "ledger.html",
-        {
-            "request": request,
-            "transactions": transactions,
-            "has_searched": has_searched,
-        },
+        "ledger.html", {"request": request, "transactions": transactions}
     )
 
 
