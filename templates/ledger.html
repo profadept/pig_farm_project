@@ -105,27 +105,32 @@
                             <td>{{ transaction.qty }} {{ transaction.unit_of_measure.value if transaction.unit_of_measure else transaction.unit_of_measure }}</td>
                             
                             <td>₦{{ transaction.total_amount }}</td>
+
+                            <td>₦{{ transaction.amount_paid }}</td>
                             
                             <td>
-                                {% if transaction.payment_status == 'Full' %}
-                                    <span class="badge bg-success">Full</span>
-                                {% elif transaction.payment_status == 'Part' %}
+                                {% set status_val = transaction.payment_status.value if transaction.payment_status else transaction.payment_status %}
+                                
+                                {% if status_val == 'Paid' %}
+                                    <span class="badge bg-success">Paid</span>
+                                {% elif status_val == 'Partially Paid' %}
                                     <span class="badge bg-warning text-dark">Part</span>
                                 {% else %}
                                     <span class="badge bg-danger">Unpaid</span>
                                 {% endif %}
                             </td>
                             
-                            <td>
-                                <div class="btn-group shadow-sm" role="group">
-                                    <a href="/transaction/{{ transaction.id }}" class="btn btn-sm btn-outline-info" title="View Receipt">
-                                        👁️ View
-                                    </a>
-                                    <a href="/edit-transaction/{{ transaction.id }}" class="btn btn-sm btn-outline-primary" title="Edit Record">
-                                        ✏️ Edit
-                                    </a>
-                                </div>
-                            </td>
+                          <td class="align-middle text-end pe-3">
+                            <div class="d-inline-flex border rounded bg-white shadow-sm">
+                                <a href="/transaction/{{ transaction.id }}" class="btn btn-light border-0 border-end rounded-0" style="padding: 4px 8px;" title="View Receipt">👁️</a>
+                                
+                                <a href="/edit-transaction/{{ transaction.id }}" class="btn btn-light border-0 border-end rounded-0" style="padding: 4px 8px;" title="Edit Record">✏️</a>
+                                
+                                <form action="/delete-transaction/{{ transaction.id }}" method="POST" class="m-0 p-0 d-flex" onsubmit="return confirm('⚠️ Are you sure?');">
+                                    <button type="submit" class="btn btn-light border-0 rounded-0" style="padding: 4px 8px;" title="Delete Record">🗑️</button>
+                                </form>
+                            </div>
+                        </td>
 
                         </tr>
                         {% else %}
