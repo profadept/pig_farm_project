@@ -54,6 +54,16 @@ class StatusEnum(str, Enum):
     partially_paid = "Partially Paid"
 
 
+class UserRole(str, Enum):
+    """
+    Defines the permission levels for system access.
+
+    """
+
+    ADMIN = "Admin"  # Full access (You)
+    STAFF = "Staff"  # Limited access (e.g., can add records, but cannot delete)
+
+
 # ---------------------------------------------------------
 # DATABASE MODELS: The Postgres Blueprints
 # ---------------------------------------------------------
@@ -87,3 +97,27 @@ class Transaction(SQLModel, table=True):
     entity_name: Optional[str] = Field(default=None)
     reference_tag: Optional[str] = Field(default=None)
     remarks: Optional[str] = Field(default=None)
+
+
+class User(SQLModel, table=True):
+    """
+    Represents a registered user in the farm management system.
+
+    This table strictly handles authentication (logins) and authorization (roles).
+    General farm clients or vendors should NOT be stored in this table
+    unless they require direct dashboard access.
+    """
+
+    __tablename__ = "users"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+
+    # Authentication Core
+    username: str = Field(unique=True, index=True)  # <-- Added your username column!
+    email: str = Field(unique=True, index=True)
+    hashed_password: str
+
+    # Profile & Permissions
+    full_name: str
+    role: UserRole = Field(default=UserRole.STAFF)
+    is_active: bool = Field(default=True)

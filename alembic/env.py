@@ -7,6 +7,8 @@ from sqlalchemy import pool
 
 from alembic import context
 from sqlmodel import SQLModel
+from src.models import SQLModel
+
 
 # 1. IMPORT YOUR BLUEPRINT HERE
 # Note: If your file is named models.py, change "model" to "models"

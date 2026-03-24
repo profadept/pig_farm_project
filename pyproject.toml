@@ -6,8 +6,10 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "alembic>=1.18.4",
+    "bcrypt==4.0.1",
     "fastapi[standard]>=0.135.1",
     "pandas>=3.0.1",
+    "passlib[bcrpt,bcrypt]>=1.7.4",
     "psycopg[binary]>=3.3.3",
     "python-multipart>=0.0.22",
     "sqlmodel>=0.0.37",
