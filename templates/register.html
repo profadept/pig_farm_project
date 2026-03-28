@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-5">
+                <h3 class="text-center mb-4 fw-bold">Create Account</h3>
+                
+                {% if error %}
+                <div class="alert alert-danger py-2 shadow-sm border-0">
+                    {{ error }}
+                </div>
+                {% endif %}
+
+                <form method="POST" action="/register">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Full Name</label>
+                        <input type="text" class="form-control" name="full_name" required placeholder="e.g. Prof Adept">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Email Address</label>
+                        <input type="email" class="form-control" name="email" required placeholder="name@farm.com">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Username</label>
+                        <input type="text" class="form-control" name="username" required placeholder="Choose a unique ID">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-medium">Password</label>
+                        <input type="password" class="form-control" name="password" required placeholder="Create a strong password">
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100 fw-bold shadow-sm">Register as Worker</button>
+                    
+                </form>
+
+                <div class="text-center mt-4">
+                    <span class="text-muted">Already have an account?</span> 
+                    <a href="/login" class="text-success fw-medium text-decoration-none">Log in here</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

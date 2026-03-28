@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Depends, Form, HTTPException
+from fastapi import FastAPI, Request, Depends, Form, HTTPException, Cookie, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlmodel import Session, select
@@ -7,12 +7,15 @@ from typing import Optional
 
 
 from src.database import engine
+from src.security import hash_password, verify_password
 from src.models import (
     Transaction,
     CategoryEnum,
     StatusEnum,
     UnitOfMeasureEnum,
     TransactionTypeEnum,
+    User,
+    UserRole,
 )
 
 
@@ -38,13 +41,129 @@ def get_session():
         yield session
 
 
-@app.get("/", response_class=HTMLResponse)
-def read_root(request: Request, session: Session = Depends(get_session)):
-    """
-    Main Dashboard Endpoint.
+def get_current_user(
+    request: Request,
+    farm_session: str | None = Cookie(None),
+    session: Session = Depends(get_session),
+):
+    """Check for a valid cookie before letting anyone pass"""
 
-    Queries the database for all transaction records and injects them into
-    the index.html template using Jinja2 to render the visual ledger.
+    if not farm_session:
+        raise HTTPException(
+            status_code=status.HTTP_303_SEE_OTHER, headers={"location": "/login"}
+        )
+
+    statement = select(User).where(User.username == farm_session)
+    user = session.exec(statement).first()
+
+    if not user or not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_303_SEE_OTHER, headers={"location": "/login"}
+        )
+
+    return user
+
+
+@app.get("/register")
+def show_register_page(request: Request):
+    """Sends the register.html form page to the user's browser."""
+
+    return templates.TemplateResponse("register.html", {"request": request})
+
+
+@app.post("/register")
+def process_registration(
+    request: Request,
+    full_name: str = Form(...),
+    email: str = Form(...),
+    username: str = Form(...),
+    password: str = Form(...),
+    session: Session = Depends(get_session),
+):
+    """Catches the form data, checks for duplicates and saves the user."""
+
+    statement = select(User).where((User.username == username) | (User.email == email))
+    existing_user = session.exec(statement).first()
+    if existing_user:
+        return templates.TemplateResponse(
+            "register.html",
+            {
+                "request": request,
+                "error": "Sorry, that username or email already exist!",
+            },
+        )
+    encrypt_passw = hash_password(password)
+    new_user = User(
+        full_name=full_name,
+        email=email,
+        username=username,
+        password=encrypt_passw,
+        role=UserRole.STAFF,
+        is_active=True,
+    )
+    session.add(new_user)
+    session.commit()
+
+    return RedirectResponse(url="/login? msg=registered", status_code=303)
+
+
+@app.get("/login")
+def login_route(request: Request):
+    """Route users to the login html page."""
+
+    return templates.TemplateResponse("login.html", {"request": request})
+
+
+@app.post("/login")
+def process_login(
+    request: Request,
+    username: str = Form(...),
+    password: str = Form(...),
+    session: Session = Depends(get_session),
+):
+    """Verfies the password and hands out the VIP Cookie."""
+
+    statement = select(User).where(User.username == username)
+    user = session.exec(statement).first()
+    user_pass = verify_password(password, user.hashed_password)
+    if not user or not user_pass:
+        return templates.TemplateResponse(
+            "/login.html",
+            {
+                "request": request,
+                "error": "Invalid Username or Password. Please Try Again.",
+            },
+        )
+    response = RedirectResponse(url="/", status_code=303)
+    response.set_cookie(
+        key="farm_session", value=user.username, httponly=True, max_age=1200
+    )
+    return response
+
+
+@app.get("/logout")
+def logout_user():
+    """Destroys the user's cookie and kicks them back to the login page."""
+
+    # 1. Point them back to the login door, with a nice message
+    response = RedirectResponse(url="/login?msg=logged_out", status_code=303)
+
+    # 2. The Kill Switch: Tell the browser to delete the cookie!
+    response.delete_cookie(key="farm_session")
+
+    # 3. Hand the package back to the browser
+    return response
+
+
+@app.get("/", response_class=HTMLResponse)
+def read_root(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+):
+    """
+    Secure Dashboard Endpoint.
+    Only allows logged-in users, and loads their farm data.
     """
     # 1. Grab all transactions using your secure session
     statement = select(Transaction).order_by(Transaction.txn_date.desc()).limit(10)
@@ -52,7 +171,8 @@ def read_root(request: Request, session: Session = Depends(get_session)):
 
     # 2. Hand the web request and the data over to the HTML template
     return templates.TemplateResponse(
-        "index.html", {"request": request, "transactions": transactions}
+        "index.html",
+        {"request": request, "user": current_user, "transactions": transactions},
     )
 
 

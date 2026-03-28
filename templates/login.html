@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-5">
+                <h3 class="text-center mb-4 fw-bold">Welcome Back</h3>
+                
+                {% set msg = request.query_params.get('msg') %}
+                {% if msg == 'registered' %}
+                <div class="alert alert-success py-2 shadow-sm border-0">
+                    ✅ Account created! Please log in to continue.
+                </div>
+                {% endif %}
+
+                {% if error %}
+                <div class="alert alert-danger py-2 shadow-sm border-0">
+                    🚨 {{ error }}
+                </div>
+                {% endif %}
+
+                <form method="POST" action="/login">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Username</label>
+                        <input type="text" class="form-control" name="username" required placeholder="Enter your username">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-medium">Password</label>
+                        <input type="password" class="form-control" name="password" required placeholder="Enter your password">
+                    </div>
+
+                    <button type="submit" class="btn btn-dark w-100 fw-bold shadow-sm">Log In</button>
+                    
+                </form>
+
+                <div class="text-center mt-4">
+                    <span class="text-muted">Don't have an account?</span> 
+                    <a href="/register" class="text-success fw-medium text-decoration-none">Register here</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

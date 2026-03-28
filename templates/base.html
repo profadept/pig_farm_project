@@ -48,12 +48,24 @@
                     </ul>
 
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Login</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="btn btn-outline-success btn-sm ms-2 mt-1 fw-bold" href="#">Register</a>
-                    </li>
+                    {% if user %}
+                        <li class="nav-item">
+                            <span class="nav-link text-white fw-medium">
+                                👤 {{ user.username }} <span class="badge bg-secondary ms-1">{{ user.role.value }}</span>
+                            </span>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-outline-danger btn-sm ms-3 mt-1 fw-bold" href="/logout">Logout</a>
+                        </li>
+                    
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="/login">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-outline-success btn-sm ms-2 mt-1 fw-bold" href="/register">Register</a>
+                        </li>
+                    {% endif %}
                 </ul>
             </div>
         </div>
