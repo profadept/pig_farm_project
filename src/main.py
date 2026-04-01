@@ -19,6 +19,13 @@ from src.models import (
 )
 
 
+# --- CUSTOM EXCEPTIONS (Our Targeted Alarms) ---
+class AdminAccessDeniedException(Exception):
+    """Triggered when a STAFF member tries to perform an ADMIN action."""
+
+    pass
+
+
 # The Boss: Now with professional metadata for your documentation
 app = FastAPI(
     title="Pig Farm Accounting API",
@@ -64,24 +71,52 @@ def get_current_user(
     return user
 
 
+def get_admin_user(current_user: User = Depends(get_current_user)):
+    """The VIP Manager: Only allows users with the ADMIN role to pass."""
+
+    # If their badge says anything other than ADMIN, kick them out!
+    if current_user.role != UserRole.ADMIN:
+        raise AdminAccessDeniedException()
+
+    return current_user
+
+
+@app.exception_handler(AdminAccessDeniedException)
+async def admin_access_denied_handler(
+    request: Request, exc: AdminAccessDeniedException
+):
+    """
+    The Catcher: If anyone pulls the AdminAccessDeniedException alarm anywhere
+    in the app, this net catches them and bounces them to the ledger safely.
+    """
+    return RedirectResponse(url="/ledger?msg=denied", status_code=303)
+
+
+def redirect_if_authenticated(
+    farm_session: str | None = Cookie(None), session: Session = Depends(get_session)
+):
+    """The Anti-Bouncer: If you already have a VIP badge, you cannot enter here."""
+    if farm_session:
+        statement = select(User).where(User.username == farm_session)
+        user = session.exec(statement).first()
+
+        if user and user.is_active:
+            # We RAISE an exception to instantly halt the route and redirect
+            raise HTTPException(
+                status_code=status.HTTP_303_SEE_OTHER,
+                headers={"Location": "/dashboard"},
+            )
+
+
 @app.get("/register")
 def show_register_page(
     request: Request,
     farm_session: str | None = Cookie(None),
     session: Session = Depends(get_session),
+    _guard: None = Depends(redirect_if_authenticated),
 ):
     """Sends the register.html form page, but redirects if already logged in."""
 
-    # --- THE REVERSE BOUNCER ---
-    if farm_session:
-        statement = select(User).where(User.username == farm_session)
-        user = session.exec(statement).first()
-
-        # If the badge is real and the user is active, kick them out of the register page!
-        if user and user.is_active:
-            return RedirectResponse(url="/dashboard", status_code=303)
-
-    # If they don't have a badge (or it's fake), show them the blank form.
     return templates.TemplateResponse("register.html", {"request": request})
 
 
@@ -118,27 +153,18 @@ def process_registration(
     session.add(new_user)
     session.commit()
 
-    return RedirectResponse(url="/login? msg=registered", status_code=303)
+    return RedirectResponse(url="/login?msg=registered", status_code=303)
 
 
 @app.get("/login")
 def login_route(
     request: Request,
-    farm_session: str | None = Cookie(None),  # 1. Look for the badge
-    session: Session = Depends(get_session),  # 2. Open the vault
+    farm_session: str | None = Cookie(None),
+    session: Session = Depends(get_session),
+    _guard: None = Depends(redirect_if_authenticated),
 ):
     """Route users to the login html page, but redirects if already logged in."""
 
-    # --- THE REVERSE BOUNCER ---
-    if farm_session:
-        statement = select(User).where(User.username == farm_session)
-        user = session.exec(statement).first()
-
-        # If the badge is real and the user is active, kick them out of the login page!
-        if user and user.is_active:
-            return RedirectResponse(url="/dashboard", status_code=303)
-
-    # If they don't have a badge, show them the login form.
     return templates.TemplateResponse("login.html", {"request": request})
 
 
@@ -154,6 +180,7 @@ def process_login(
     statement = select(User).where(User.username == username)
     user = session.exec(statement).first()
     user_pass = verify_password(password, user.hashed_password)
+
     if not user or not user_pass:
         return templates.TemplateResponse(
             "/login.html",
@@ -162,6 +189,7 @@ def process_login(
                 "error": "Invalid Username or Password. Please Try Again.",
             },
         )
+
     response = RedirectResponse(url="/", status_code=303)
     response.set_cookie(
         key="farm_session", value=user.username, httponly=True, max_age=1200
@@ -173,13 +201,8 @@ def process_login(
 def logout_user():
     """Destroys the user's cookie and kicks them back to the login page."""
 
-    # 1. Point them back to the login door, with a nice message
     response = RedirectResponse(url="/login?msg=logged_out", status_code=303)
-
-    # 2. The Kill Switch: Tell the browser to delete the cookie!
     response.delete_cookie(key="farm_session")
-
-    # 3. Hand the package back to the browser
     return response
 
 
@@ -227,14 +250,22 @@ def read_dashboard(
 
 
 @app.get("/add-transaction", response_class=HTMLResponse)
-def show_add_transaction(request: Request):
+def show_add_transaction(
+    request: Request, current_user: User = Depends(get_current_user)
+):
     """
     Displays the HTML form for data entry.
 
     This is a simple GET request that just grabs the 'add_transaction.html'
     child template and injects it into the base shell.
     """
-    return templates.TemplateResponse("add_transaction.html", {"request": request})
+    return templates.TemplateResponse(
+        "add_transaction.html",
+        {
+            "request": request,
+            "user": current_user,
+        },
+    )
 
 
 @app.post("/add-transaction", response_class=RedirectResponse)
@@ -259,17 +290,11 @@ def process_add_transaction(
     on the backend, and commits the new transaction to the PostgreSQL ledger.
     """
 
-    # Prevent negative inputs from corrupting the financial data
-    # Hackers or accidental typos could bypass the HTML frontend restrictions,
-    # so we enforce a hard security wall here on the server side.
     if qty < 0 or unit_price < 0 or amount_paid < 0:
         raise HTTPException(
             status_code=400, detail="Financial values cannot be negative."
         )
 
-    # Calculate the total amount securely on the backend
-    # We never trust the frontend to send the total amount. By calculating it
-    # here in Python, we guarantee the math is absolutely flawless for Pandas.
     total_amount = qty * unit_price
 
     # Map the validated form data to our strict database blueprint
@@ -287,7 +312,7 @@ def process_add_transaction(
         entity_name=entity_name,
         reference_tag=reference_tag,
         remarks=remarks,
-        user_id=current_user.id
+        user_id=current_user.id,
     )
 
     # Lock the transaction into the database vault
@@ -308,6 +333,7 @@ def read_ledger(
     end_date: Optional[str] = None,
     category: Optional[str] = None,
     payment_status: Optional[str] = None,
+    current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ):
     """
@@ -321,34 +347,34 @@ def read_ledger(
     query = select(Transaction)
 
     if start_date and start_date.strip() != "":
-        # Convert the string to a real PostgreSQL-friendly Date object
         parsed_start = datetime.strptime(start_date, "%Y-%m-%d").date()
         query = query.where(Transaction.txn_date >= parsed_start)
 
-    # 3. Safely handle the end_date
     if end_date and end_date.strip() != "":
         parsed_end = datetime.strptime(end_date, "%Y-%m-%d").date()
         query = query.where(Transaction.txn_date <= parsed_end)
 
-    # 4. Safely handle Category and Status (ignoring empty strings)
     if category and category.strip() != "":
         query = query.where(Transaction.category == category)
 
     if payment_status and payment_status.strip() != "":
         query = query.where(Transaction.payment_status == payment_status)
 
-    # 5. Execute the final query
     transactions = session.exec(query.order_by(Transaction.txn_date.desc())).all()
     print(f"======== DEBUG: Python found {len(transactions)} rows! ========")
 
     return templates.TemplateResponse(
-        "ledger.html", {"request": request, "transactions": transactions}
+        "ledger.html",
+        {"request": request, "user": current_user, "transactions": transactions},
     )
 
 
 @app.get("/edit-transaction/{id}", response_class=HTMLResponse)
 def show_edit_transaction(
-    id: int, request: Request, session: Session = Depends(get_session)
+    id: int,
+    request: Request,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Step 1 of Editing: The GET Route
@@ -364,7 +390,8 @@ def show_edit_transaction(
         raise HTTPException(status_code=404, detail="Transaction not found")
 
     return templates.TemplateResponse(
-        "edit_transaction.html", {"request": request, "transaction": transaction}
+        "edit_transaction.html",
+        {"request": request, "user": current_user, "transaction": transaction},
     )
 
 
@@ -383,6 +410,7 @@ def process_edit_transaction(
     entity_name: Optional[str] = Form(None),
     reference_tag: Optional[str] = Form(None),
     remarks: Optional[str] = Form(None),
+    current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ):
     """
@@ -391,18 +419,16 @@ def process_edit_transaction(
     Catches the submitted form data, finds the original record,
     overwrites the old data with the newly typed V2 architecture data, and saves it.
     """
-    # 1. Find the original record
+
     transaction = session.get(Transaction, id)
     if not transaction:
         raise HTTPException(status_code=404, detail="Transaction not found")
 
-    # 2. Backend Security Check
     if qty < 0 or unit_price < 0 or amount_paid < 0:
         raise HTTPException(
             status_code=400, detail="Financial values cannot be negative."
         )
 
-    # 3. Overwrite the old values with the new form values
     transaction.txn_date = txn_date
     transaction.txn_type = txn_type
     transaction.category = category
@@ -410,14 +436,13 @@ def process_edit_transaction(
     transaction.qty = qty
     transaction.unit_of_measure = unit_of_measure
     transaction.unit_price = unit_price
-    transaction.total_amount = qty * unit_price  # Recalculate securely!
+    transaction.total_amount = qty * unit_price
     transaction.amount_paid = amount_paid
     transaction.payment_status = payment_status
     transaction.entity_name = entity_name
     transaction.reference_tag = reference_tag
     transaction.remarks = remarks
 
-    # 4. Save and redirect back to the Ledger page with an edit flag
     session.add(transaction)
     session.commit()
     return RedirectResponse(url="/ledger?msg=edited", status_code=303)
@@ -425,40 +450,52 @@ def process_edit_transaction(
 
 @app.get("/transaction/{id}", response_class=HTMLResponse)
 def view_transaction(
-    id: int, request: Request, session: Session = Depends(get_session)
+    id: int,
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
 ):
     """
     The View Route (Read)
     Fetches a single transaction and displays it on a dedicated receipt page.
     """
+
     transaction = session.get(Transaction, id)
     if not transaction:
         raise HTTPException(status_code=404, detail="Transaction not found")
 
     return templates.TemplateResponse(
-        "view_transaction.html", {"request": request, "transaction": transaction}
+        "view_transaction.html",
+        {"request": request, "user": current_user, "transaction": transaction},
     )
 
 
 @app.post("/delete-transaction/{id}", response_class=RedirectResponse)
-def delete_transaction(id: int, session: Session = Depends(get_session)):
+def delete_transaction(
+    id: int,
+    admin_user: User = Depends(get_admin_user),
+    session: Session = Depends(get_session),
+):
     """
     The Delete Route (Destroy)
     Permanently removes a transaction from Postgres and reloads the ledger.
     """
+
     transaction = session.get(Transaction, id)
     if not transaction:
         raise HTTPException(status_code=404, detail="Transaction not found")
 
     session.delete(transaction)
     session.commit()
-    # Redirect back to the Ledger with a delete flag
+
     return RedirectResponse(url="/ledger?msg=deleted", status_code=303)
 
 
 @app.post("/transactions/", response_model=Transaction)
 def create_transaction(
-    transaction: Transaction, session: Session = Depends(get_session)
+    transaction: Transaction,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
 ):
     """
     Create a new financial transaction in the Postgres ledger.
@@ -468,21 +505,20 @@ def create_transaction(
 
     Returns the newly created database record, complete with its auto-generated Postgres ID.
     """
+
     session.add(transaction)
     session.commit()
     session.refresh(transaction)
+
     return transaction
 
 
 @app.get("/transactions/", response_model=list[Transaction])
-def read_transactions():
-    # 1. Open a "Session" (A temporary conversation with the DB)
+def read_transactions(
+    current_user: User = Depends(get_current_user),
+):
+
     with Session(engine) as session:
-        # 2. Write the Python version of "SELECT * FROM transaction"
         statement = select(Transaction)
-
-        # 3. Execute the statement and grab the results
         results = session.exec(statement).all()
-
-        # 4. Hand the list back to the browser
         return results

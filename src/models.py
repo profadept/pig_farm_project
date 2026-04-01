@@ -99,7 +99,7 @@ class Transaction(SQLModel, table=True):
     remarks: Optional[str] = Field(default=None)
 
     user_id: int | None = Field(default=None, foreign_key="users.id")
-    
+
     # 2. The Relationship (The magic Python link)
     user: Optional["User"] = Relationship(back_populates="transactions")
 

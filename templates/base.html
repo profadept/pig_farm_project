@@ -50,13 +50,18 @@
 
                 <ul class="navbar-nav ms-auto">
                     {% if user %}
-                        <li class="nav-item">
+                        <li class="nav-item d-flex align-items-center">
+                            <a class="nav-link text-info fw-bold me-3" href="#">⚙️ Settings</a>
+                        </li>
+                        
+                        <li class="nav-item d-flex align-items-center">
                             <span class="nav-link text-white fw-medium">
                                 👤 {{ user.username }} <span class="badge bg-secondary ms-1">{{ user.role.value }}</span>
                             </span>
                         </li>
-                        <li class="nav-item">
-                            <a class="btn btn-outline-danger btn-sm ms-3 mt-1 fw-bold" href="/logout">Logout</a>
+                        
+                        <li class="nav-item d-flex align-items-center">
+                            <a class="btn btn-outline-danger btn-sm ms-3 fw-bold" href="/logout">Logout</a>
                         </li>
                     
                     {% else %}
@@ -93,6 +98,12 @@
             <strong>🗑️ Deleted.</strong> The transaction was permanently removed from the ledger.
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
+
+        {% elif msg == 'denied' %}
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 border-start border-danger border-4" role="alert">
+            <strong>⛔ Access Denied.</strong> You do not have Administrator privileges to perform that action.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
         {% endif %}
 
         {% block content %}{% endblock %}
@@ -107,15 +118,14 @@
             alerts.forEach(alert => {
                 let bsAlert = new bootstrap.Alert(alert);
                 bsAlert.close();
-            });
+                });
             
             // Clean the URL so the message doesn't pop up again if they refresh
             if (window.history.replaceState) {
                 const url = new URL(window.location);
                 url.searchParams.delete('msg');
                 window.history.replaceState(null, '', url.toString());
-            }
-        }, 4000);
+                }}, 4000);
     </script>
 </body>
 </html>
