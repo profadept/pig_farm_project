@@ -65,9 +65,23 @@ def get_current_user(
 
 
 @app.get("/register")
-def show_register_page(request: Request):
-    """Sends the register.html form page to the user's browser."""
+def show_register_page(
+    request: Request,
+    farm_session: str | None = Cookie(None),
+    session: Session = Depends(get_session),
+):
+    """Sends the register.html form page, but redirects if already logged in."""
 
+    # --- THE REVERSE BOUNCER ---
+    if farm_session:
+        statement = select(User).where(User.username == farm_session)
+        user = session.exec(statement).first()
+
+        # If the badge is real and the user is active, kick them out of the register page!
+        if user and user.is_active:
+            return RedirectResponse(url="/dashboard", status_code=303)
+
+    # If they don't have a badge (or it's fake), show them the blank form.
     return templates.TemplateResponse("register.html", {"request": request})
 
 
@@ -97,7 +111,7 @@ def process_registration(
         full_name=full_name,
         email=email,
         username=username,
-        password=encrypt_passw,
+        hashed_password=encrypt_passw,
         role=UserRole.STAFF,
         is_active=True,
     )
@@ -108,9 +122,23 @@ def process_registration(
 
 
 @app.get("/login")
-def login_route(request: Request):
-    """Route users to the login html page."""
+def login_route(
+    request: Request,
+    farm_session: str | None = Cookie(None),  # 1. Look for the badge
+    session: Session = Depends(get_session),  # 2. Open the vault
+):
+    """Route users to the login html page, but redirects if already logged in."""
 
+    # --- THE REVERSE BOUNCER ---
+    if farm_session:
+        statement = select(User).where(User.username == farm_session)
+        user = session.exec(statement).first()
+
+        # If the badge is real and the user is active, kick them out of the login page!
+        if user and user.is_active:
+            return RedirectResponse(url="/dashboard", status_code=303)
+
+    # If they don't have a badge, show them the login form.
     return templates.TemplateResponse("login.html", {"request": request})
 
 
@@ -158,20 +186,42 @@ def logout_user():
 @app.get("/", response_class=HTMLResponse)
 def read_root(
     request: Request,
-    current_user: User = Depends(get_current_user),
+    farm_session: str | None = Cookie(None),
     session: Session = Depends(get_session),
 ):
     """
-    Secure Dashboard Endpoint.
-    Only allows logged-in users, and loads their farm data.
+    The Public StoreFront. AnyOne can see this
     """
-    # 1. Grab all transactions using your secure session
-    statement = select(Transaction).order_by(Transaction.txn_date.desc()).limit(10)
-    transactions = session.exec(statement).all()
+
+    current_user = None
+    if farm_session:
+        statement = select(User).where(User.username == farm_session)
+        current_user = session.exec(statement).first()
 
     # 2. Hand the web request and the data over to the HTML template
     return templates.TemplateResponse(
-        "index.html",
+        "homepage.html",
+        {
+            "request": request,
+            "user": current_user,
+        },
+    )
+
+
+@app.get("/dashboard")
+def read_dashboard(
+    request: Request,
+    current_user: User = Depends(get_current_user),  # The STRICT Tollbooth Guard
+    session: Session = Depends(get_session),
+):
+    """The Secure Ledger. Must have a valid VIP Cookie."""
+
+    # Grab the latest 10 transactions
+    statement = select(Transaction).order_by(Transaction.txn_date.desc()).limit(10)
+    transactions = session.exec(statement).all()
+
+    return templates.TemplateResponse(
+        "index.html",  # This still points to your ledger template!
         {"request": request, "user": current_user, "transactions": transactions},
     )
 

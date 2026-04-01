@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-5 shadow-sm rounded-4 overflow-hidden">
+    <div class="col-12 text-center text-white py-5" style="background: linear-gradient(135deg, #198754 0%, #212529 100%);">
+        <div class="py-5">
+            <span class="badge bg-warning text-dark mb-3 px-3 py-2 rounded-pill fw-bold">Powered by FarmOS</span>
+            <h1 class="display-3 fw-bolder mb-3" style="letter-spacing: -1px;">Prof Adept Farms</h1>
+            <p class="lead fs-4 mb-5 text-light">Precision Agriculture. Powered by Technology.</p>
+            
+            {% if not user %}
+                <a href="/login" class="btn btn-light btn-lg fw-bold px-5 text-success shadow-sm rounded-pill">
+                    Staff Portal Login &rarr;
+                </a>
+            {% else %}
+                <a href="/dashboard" class="btn btn-warning btn-lg fw-bold px-5 shadow-sm rounded-pill">
+                    Enter Dashboard &rarr;
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-5 text-center">
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm p-4">
+            <div class="display-4 mb-3">🧬</div>
+            <h4 class="fw-bold text-success">Premium Genetics</h4>
+            <p class="text-muted">Raising high-quality, resilient livestock with optimal growth rates and strict health standards.</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm p-4">
+            <div class="display-4 mb-3">📊</div>
+            <h4 class="fw-bold text-success">Data-Driven</h4>
+            <p class="text-muted">Every gram of feed and every medical treatment is tracked to guarantee absolute quality control.</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm p-4">
+            <div class="display-4 mb-3">🌿</div>
+            <h4 class="fw-bold text-success">Sustainable</h4>
+            <p class="text-muted">Implementing modern, clean, and sustainable farming practices in our custom-built facilities.</p>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5 pt-4 border-top">
+    <div class="col-md-6 mb-3">
+        <h5 class="fw-bold">📍 Farm Location</h5>
+        <p class="text-muted">Oke Aro Farm Estate<br>Ondo State, Nigeria</p>
+    </div>
+    <div class="col-md-6 text-md-end">
+        <h5 class="fw-bold">📞 Contact Management</h5>
+        <p class="text-muted mb-1">Phone: <strong>+234 7067719143</strong></p>
+        <p class="text-muted">Email: <strong>profadeptfarm@gmail.com</strong></p>
+    </div>
+</div>
+{% endblock %}

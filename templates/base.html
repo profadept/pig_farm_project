@@ -23,29 +23,30 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 
                 <ul class="navbar-nav me-auto">
+                    {% if user %}
                     
-                    {% if request.url.path != '/' %}
-                    <li class="nav-item">
-                        <a class="nav-link px-3" href="/">Dashboard</a>
-                    </li>
+                        {% if request.url.path != '/' %}
+                        <li class="nav-item">
+                            <a class="nav-link px-3" href="/">Dashboard</a>
+                        </li>
+                        {% endif %}
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle px-3" href="#" id="accountingDropdown" role="button" data-bs-toggle="dropdown">
+                                📊 Financials
+                            </a>
+                            <ul class="dropdown-menu shadow-sm border-0">
+                                {% if request.url.path != '/add-transaction' %}
+                                <li><a class="dropdown-item fw-medium" href="/add-transaction">➕ Add Transaction</a></li>
+                                {% endif %}
+                                
+                                {% if request.url.path != '/ledger' %}
+                                <li><a class="dropdown-item fw-medium" href="/ledger">📖 Master Ledger</a></li>
+                                {% endif %}
+                            </ul>
+                        </li>
                     {% endif %}
-
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle px-3" href="#" id="accountingDropdown" role="button" data-bs-toggle="dropdown">
-                            📊 Financials
-                        </a>
-                        <ul class="dropdown-menu shadow-sm border-0">
-                            {% if request.url.path != '/add-transaction' %}
-                            <li><a class="dropdown-item fw-medium" href="/add-transaction">➕ Add Transaction</a></li>
-                            {% endif %}
-                            
-                            {% if request.url.path != '/ledger' %}
-                            <li><a class="dropdown-item fw-medium" href="/ledger">📖 Master Ledger</a></li>
-                            {% endif %}
-                        </ul>
-                    </li>
-
-                    </ul>
+                </ul>
 
                 <ul class="navbar-nav ms-auto">
                     {% if user %}
