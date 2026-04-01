@@ -19,7 +19,6 @@ from src.models import (
 )
 
 
-# --- CUSTOM EXCEPTIONS (Our Targeted Alarms) ---
 class AdminAccessDeniedException(Exception):
     """Triggered when a STAFF member tries to perform an ADMIN action."""
 
@@ -96,6 +95,7 @@ def redirect_if_authenticated(
     farm_session: str | None = Cookie(None), session: Session = Depends(get_session)
 ):
     """The Anti-Bouncer: If you already have a VIP badge, you cannot enter here."""
+
     if farm_session:
         statement = select(User).where(User.username == farm_session)
         user = session.exec(statement).first()
@@ -489,6 +489,21 @@ def delete_transaction(
     session.commit()
 
     return RedirectResponse(url="/ledger?msg=deleted", status_code=303)
+
+
+@app.get("/settings", response_class=HTMLResponse)
+def show_settings_page(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+):
+    """
+    Serves the user profile and settings dashboard.
+    """
+
+    return templates.TemplateResponse(
+        "profile.html", {"request": request, "user": current_user}
+    )
 
 
 @app.post("/transactions/", response_model=Transaction)

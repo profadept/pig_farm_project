@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2 class="fw-bold text-dark">⚙️ Profile & Settings</h2>
+        <p class="text-muted">Manage your personal information and account security.</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white border-bottom pt-4 pb-3">
+                <h5 class="mb-0 fw-bold text-secondary">Personal Information</h5>
+            </div>
+            <div class="card-body p-4">
+                
+                <form action="/settings/update-info" method="POST">
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-secondary small">Username (Locked)</label>
+                            <input type="text" class="form-control bg-light" value="{{ user.username }}" readonly disabled>
+                            <small class="text-muted" style="font-size: 0.75rem;">Used for your login session.</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-secondary small">Account Role</label><br>
+                            <span class="badge {% if user.role.value == 'ADMIN' %}bg-primary{% else %}bg-secondary{% endif %} fs-6 mt-1">
+                                {{ user.role.value }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <hr class="text-muted my-4">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary small">Full Name</label>
+                        <input type="text" class="form-control" name="full_name" value="{{ user.full_name }}" required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-secondary small">Email Address</label>
+                        <input type="email" class="form-control" name="email" value="{{ user.email }}" required>
+                    </div>
+
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-primary fw-bold px-4">💾 Save Changes</button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0 border-start border-danger border-4 h-100">
+            <div class="card-header bg-white border-bottom pt-4 pb-3">
+                <h5 class="mb-0 fw-bold text-danger">Security & Password</h5>
+            </div>
+            <div class="card-body p-4">
+                
+                <form action="/settings/update-password" method="POST">
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-secondary small">Current Password</label>
+                        <input type="password" class="form-control" name="current_password" placeholder="Enter your current password" required>
+                        <small class="text-muted" style="font-size: 0.75rem;">Required to verify your identity.</small>
+                    </div>
+
+                    <hr class="text-muted my-4">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary small">New Password</label>
+                        <input type="password" class="form-control" name="new_password" placeholder="Enter new password" required minlength="6">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-secondary small">Confirm New Password</label>
+                        <input type="password" class="form-control" name="confirm_password" placeholder="Re-type new password" required minlength="6">
+                    </div>
+
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-danger fw-bold px-4">🔒 Update Password</button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
