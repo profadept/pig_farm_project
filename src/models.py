@@ -1,7 +1,7 @@
 from enum import Enum
 from datetime import date
 from typing import Optional
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, Relationship
 
 # ---------------------------------------------------------
 # ENUMS: The Strict VIP Lists (Data Science Protection)
@@ -98,6 +98,11 @@ class Transaction(SQLModel, table=True):
     reference_tag: Optional[str] = Field(default=None)
     remarks: Optional[str] = Field(default=None)
 
+    user_id: int | None = Field(default=None, foreign_key="users.id")
+    
+    # 2. The Relationship (The magic Python link)
+    user: Optional["User"] = Relationship(back_populates="transactions")
+
 
 class User(SQLModel, table=True):
     """
@@ -121,3 +126,5 @@ class User(SQLModel, table=True):
     full_name: str
     role: UserRole = Field(default=UserRole.STAFF)
     is_active: bool = Field(default=True)
+
+    transactions: list["Transaction"] = Relationship(back_populates="user")

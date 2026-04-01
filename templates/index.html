@@ -78,7 +78,8 @@
                     <div>
                         <h6 class="mb-0 fw-bold text-dark">{{ txn.item_description }}</h6>
                         <small class="text-muted">
-                            {{ txn.txn_date }} • <span class="badge bg-light text-dark border">{{ txn.category.value }}</span> • {{ txn.entity_name or 'Internal' }}
+                            {{ txn.txn_date }} • <span class="badge bg-light text-dark border">{{ txn.category.value }}</span> • {{ txn.entity_name or 'Internal' }} 
+                            • <span class="fw-medium text-secondary">👤 {% if txn.user %}{{ txn.user.full_name }}{% else %}System{% endif %}</span>
                         </small>
                     </div>
                 </div>

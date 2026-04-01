@@ -251,6 +251,7 @@ def process_add_transaction(
     entity_name: Optional[str] = Form(None),
     reference_tag: Optional[str] = Form(None),
     remarks: Optional[str] = Form(None),
+    current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ):
     """
@@ -286,6 +287,7 @@ def process_add_transaction(
         entity_name=entity_name,
         reference_tag=reference_tag,
         remarks=remarks,
+        user_id=current_user.id
     )
 
     # Lock the transaction into the database vault
