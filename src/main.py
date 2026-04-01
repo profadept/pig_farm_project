@@ -506,6 +506,55 @@ def show_settings_page(
     )
 
 
+@app.post("/settings/update-info", response_class=RedirectResponse)
+def update_personal_info(
+    full_name: str = Form(...),
+    email: str = Form(...),
+    # 🚨 The Guard checks the cookie and hands us the exact database record!
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+):
+    """
+    Catches the profile update form and saves the new name and email to the database.
+    """
+
+    current_user.full_name = full_name
+    current_user.email = email
+
+    session.add(current_user)
+    session.commit()
+
+    return RedirectResponse(url="/settings?msg=updated", status_code=303)
+
+
+@app.post("/settings/update-password", response_class=RedirectResponse)
+def update_password(
+    current_password: str = Form(...),
+    new_password: str = Form(...),
+    confirm_password: str = Form(...),
+    # 🚨 The Guard checks the cookie and hands us the user
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+):
+    """
+    Highly secure route to update a user's password.
+    Requires verification of the current password to prevent unauthorized changes.
+    """
+
+    if new_password != confirm_password:
+        return RedirectResponse(url="/settings?msg=password_mismatch", status_code=303)
+
+    if not verify_password(current_password, current_user.hashed_password):
+        return RedirectResponse(url="/settings?msg=wrong_password", status_code=303)
+
+    current_user.hashed_password = hash_password(new_password)
+
+    session.add(current_user)
+    session.commit()
+
+    return RedirectResponse(url="/settings?msg=password_updated", status_code=303)
+
+
 @app.post("/transactions/", response_model=Transaction)
 def create_transaction(
     transaction: Transaction,
