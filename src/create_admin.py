@@ -21,9 +21,9 @@ def create_initial_admin():
 
         new_admin = User(
             username=username,
-            email="admin@yourfarm.com",
+            email=os.getenv("ADMIN_EMAIL"),
             hashed_password=hashed_pw,
-            full_name="Farm SuperUser",
+            full_name=os.getenv("ADMIN_FULL_NAME"),
             role=UserRole.ADMIN,
             is_active=True,
         )
