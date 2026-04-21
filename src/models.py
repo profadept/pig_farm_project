@@ -1,11 +1,7 @@
 from enum import Enum
-from datetime import date
+from datetime import date, datetime
 from typing import Optional
 from sqlmodel import SQLModel, Field, Relationship
-
-# ---------------------------------------------------------
-# ENUMS: The Strict VIP Lists (Data Science Protection)
-# ---------------------------------------------------------
 
 
 class TransactionTypeEnum(str, Enum):
@@ -57,16 +53,73 @@ class StatusEnum(str, Enum):
 class UserRole(str, Enum):
     """
     Defines the permission levels for system access.
-
     """
 
-    ADMIN = "Admin"  # Full access (You)
-    STAFF = "Staff"  # Limited access (e.g., can add records, but cannot delete)
+    ADMIN = "Admin"
+    STAFF = "Staff"
 
 
-# ---------------------------------------------------------
-# DATABASE MODELS: The Postgres Blueprints
-# ---------------------------------------------------------
+class SupplyCategoryEnum(str, Enum):
+    FEED = "FEED"
+    MEDICINE = "MEDICINE"
+    EQUIPMENT = "EQUIPMENT"
+
+
+class UsageMetricEnum(str, Enum):
+    BOWLS = "BOWLS"
+    ML = "ML"
+    KG = "KG"
+    GRAMS = "GRAMS"
+    LITERS = "LITERS"
+    PIECES = "PIECES"
+
+
+class TrackingTypeEnum(str, Enum):
+    INDIVIDUAL = "INDIVIDUAL"
+    BATCH = "BATCH"
+
+
+class GenderEnum(str, Enum):
+    MALE = "MALE"
+    FEMALE = "FEMALE"
+    MIXED = "MIXED"
+
+
+class LivestockCategoryEnum(str, Enum):
+    PIGLET = "PIGLET"
+    WEANER = "WEANER"
+    GROWER = "GROWER"
+    FATTENER = "FATTENER"
+    SOW = "SOW"
+    BOAR = "BOAR"
+
+
+class LivestockStatusEnum(str, Enum):
+    ACTIVE = "ACTIVE"
+    PREGNANT = "PREGNANT"
+    NURSING = "NURSING"
+    SICK = "SICK"
+    SOLD = "SOLD"
+    DECEASED = "DECEASED"
+
+
+class LogActionEnum(str, Enum):
+    FED = "FED"
+    TREATED = "TREATED"
+    FARROWED = "FARROWED"
+    DIED = "DIED"
+    SOLD = "SOLD"
+    PROMOTED = "PROMOTED"
+    SPLIT = "SPLIT"
+
+
+class PigBreedEnum(str, Enum):
+    LARGE_WHITE = "LARGE_WHITE"
+    DUROC = "DUROC"
+    LANDRACE = "LANDRACE"
+    HAMPSHIRE = "HAMPSHIRE"
+    CROSSBREED = "CROSSBREED"
+    OTHER = "OTHER"
 
 
 class Transaction(SQLModel, table=True):
@@ -117,14 +170,69 @@ class User(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    # Authentication Core
     username: str = Field(unique=True, index=True)  # <-- Added your username column!
     email: str = Field(unique=True, index=True)
     hashed_password: str
 
-    # Profile & Permissions
     full_name: str
     role: UserRole = Field(default=UserRole.STAFF)
     is_active: bool = Field(default=True)
 
     transactions: list["Transaction"] = Relationship(back_populates="user")
+
+
+class SupplyInventory(SQLModel, table=True):
+    """Vault 1: The Storehouse for inanimate objects (Feed, Medicine)."""
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    item_name: str
+    category: SupplyCategoryEnum
+
+    # The physical bulk amount you own (e.g., 50)
+    total_quantity: float = Field(default=0.0)
+    unit_of_measure: str  # e.g., "Bags", "Bottles", "Packets"
+
+    usage_metric: UsageMetricEnum
+    conversion_rate: float = Field(default=1.0)
+
+    # The Digital Cable connecting the supply to its usage history
+    logs: list["InventoryLog"] = Relationship(back_populates="supply_used")
+
+
+class Livestock(SQLModel, table=True):
+    """Vault 2: The Animals (Individual tracking or Batches)."""
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    tracking_type: TrackingTypeEnum
+    identifier: str  # e.g., "SOW A" or "Male Growers"
+
+    gender: GenderEnum
+    breed: PigBreedEnum = Field(default=PigBreedEnum.OTHER)
+    category: LivestockCategoryEnum
+
+    quantity: int = Field(default=1)
+    status: LivestockStatusEnum = Field(default=LivestockStatusEnum.ACTIVE)
+    lineage_note: Optional[str] = None
+
+    logs: list["InventoryLog"] = Relationship(back_populates="livestock")
+
+
+class InventoryLog(SQLModel, table=True):
+    """Vault 3: The Audit Trail (Tracks every action on the farm)."""
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    log_date: datetime = Field(default_factory=datetime.utcnow)
+    action_type: LogActionEnum
+
+    supply_used_id: Optional[int] = Field(
+        default=None, foreign_key="supplyinventory.id"
+    )
+    livestock_id: Optional[int] = Field(default=None, foreign_key="livestock.id")
+
+    user_id: int = Field(foreign_key="users.id")
+
+    amount_used: Optional[float] = None
+    remarks: Optional[str] = None
+
+    supply_used: Optional[SupplyInventory] = Relationship(back_populates="logs")
+    livestock: Optional[Livestock] = Relationship(back_populates="logs")

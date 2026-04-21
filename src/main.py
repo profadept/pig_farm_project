@@ -19,30 +19,29 @@ from src.models import (
 )
 
 
-class AdminAccessDeniedException(Exception):
-    """Triggered when a STAFF member tries to perform an ADMIN action."""
-
-    pass
-
-
-# The Boss: Now with professional metadata for your documentation
 app = FastAPI(
     title="Pig Farm Accounting API",
     description="A professional REST API for managing farm transactions and ledger entries.",
     version="0.1.0",
 )
 
+
 # Declare folders for FastAPI to check
 templates = Jinja2Templates(directory="templates")
 
 
-def get_session():
-    """
-    Dependency generator to manage database sessions.
+class AdminAccessDeniedException(Exception):
+    """Triggered when a STAFF member tries to perform an ADMIN action."""
 
+    pass
+
+
+def get_session():
+    """Dependency generator to manage database sessions.
     Yields a secure SQLAlchemy session for the current web request,
     and automatically closes the connection when the request is finished.
     """
+
     with Session(engine) as session:
         yield session
 
@@ -141,6 +140,7 @@ def process_registration(
                 "error": "Sorry, that username or email already exist!",
             },
         )
+
     encrypt_passw = hash_password(password)
     new_user = User(
         full_name=full_name,
@@ -150,6 +150,7 @@ def process_registration(
         role=UserRole.STAFF,
         is_active=True,
     )
+
     session.add(new_user)
     session.commit()
 
@@ -194,6 +195,7 @@ def process_login(
     response.set_cookie(
         key="farm_session", value=user.username, httponly=True, max_age=1200
     )
+
     return response
 
 
@@ -212,16 +214,14 @@ def read_root(
     farm_session: str | None = Cookie(None),
     session: Session = Depends(get_session),
 ):
-    """
-    The Public StoreFront. AnyOne can see this
-    """
+    """The Public StoreFront. AnyOne can see this"""
 
     current_user = None
     if farm_session:
         statement = select(User).where(User.username == farm_session)
         current_user = session.exec(statement).first()
 
-    # 2. Hand the web request and the data over to the HTML template
+    # Hand the web request and the data over to the HTML template
     return templates.TemplateResponse(
         "homepage.html",
         {
@@ -234,7 +234,7 @@ def read_root(
 @app.get("/dashboard")
 def read_dashboard(
     request: Request,
-    current_user: User = Depends(get_current_user),  # The STRICT Tollbooth Guard
+    current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ):
     """The Secure Ledger. Must have a valid VIP Cookie."""
@@ -244,7 +244,7 @@ def read_dashboard(
     transactions = session.exec(statement).all()
 
     return templates.TemplateResponse(
-        "index.html",  # This still points to your ledger template!
+        "index.html",
         {"request": request, "user": current_user, "transactions": transactions},
     )
 
@@ -253,12 +253,8 @@ def read_dashboard(
 def show_add_transaction(
     request: Request, current_user: User = Depends(get_current_user)
 ):
-    """
-    Displays the HTML form for data entry.
+    """Displays the HTML form for data entry."""
 
-    This is a simple GET request that just grabs the 'add_transaction.html'
-    child template and injects it into the base shell.
-    """
     return templates.TemplateResponse(
         "add_transaction.html",
         {
@@ -319,10 +315,6 @@ def process_add_transaction(
     session.add(new_transaction)
     session.commit()
 
-    # Issue a redirect response to improve user experience
-    # Instead of showing a blank success screen, this bounces the user
-    # directly back to the main dashboard so they can visually verify their entry.
-    # 4. The 303 Redirect (Now with a success message flag!)
     return RedirectResponse(url="/?msg=saved", status_code=303)
 
 
@@ -337,9 +329,7 @@ def read_ledger(
     session: Session = Depends(get_session),
 ):
     """
-    Master Ledger Search Engine.
-
-    Only queries the database if at least one search parameter is provided.
+    Master Ledger Search Engine. Only queries the database if at least one search parameter is provided.
     Otherwise, returns an empty list to keep the initial page load clean.
     """
 
@@ -377,11 +367,10 @@ def show_edit_transaction(
     current_user: User = Depends(get_current_user),
 ):
     """
-    Step 1 of Editing: The GET Route
-
     Extracts the unique ID from the URL, finds that specific record in Postgres,
     and hands it to the edit form so Jinja2 can pre-fill the boxes.
     """
+
     # Grab the specific transaction
     transaction = session.get(Transaction, id)
 
@@ -413,12 +402,7 @@ def process_edit_transaction(
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ):
-    """
-    Step 2 of Editing: The POST Route
-
-    Catches the submitted form data, finds the original record,
-    overwrites the old data with the newly typed V2 architecture data, and saves it.
-    """
+    """Catches the submitted form data, finds the original record, overwrites the old data with the newly typed data, and saves it."""
 
     transaction = session.get(Transaction, id)
     if not transaction:
@@ -455,10 +439,7 @@ def view_transaction(
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ):
-    """
-    The View Route (Read)
-    Fetches a single transaction and displays it on a dedicated receipt page.
-    """
+    """The View Route (Read)Fetches a single transaction and displays it on a dedicated receipt page."""
 
     transaction = session.get(Transaction, id)
     if not transaction:
@@ -476,10 +457,7 @@ def delete_transaction(
     admin_user: User = Depends(get_admin_user),
     session: Session = Depends(get_session),
 ):
-    """
-    The Delete Route (Destroy)
-    Permanently removes a transaction from Postgres and reloads the ledger.
-    """
+    """The Delete Route (Destroy)Permanently removes a transaction from Postgres and reloads the ledger."""
 
     transaction = session.get(Transaction, id)
     if not transaction:
@@ -497,9 +475,7 @@ def show_settings_page(
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ):
-    """
-    Serves the user profile and settings dashboard.
-    """
+    """Sees the user profile and settings dashboard."""
 
     return templates.TemplateResponse(
         "profile.html", {"request": request, "user": current_user}
@@ -510,13 +486,10 @@ def show_settings_page(
 def update_personal_info(
     full_name: str = Form(...),
     email: str = Form(...),
-    # 🚨 The Guard checks the cookie and hands us the exact database record!
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ):
-    """
-    Catches the profile update form and saves the new name and email to the database.
-    """
+    """Catches the profile update form and saves the new name and email to the database."""
 
     current_user.full_name = full_name
     current_user.email = email
@@ -532,14 +505,10 @@ def update_password(
     current_password: str = Form(...),
     new_password: str = Form(...),
     confirm_password: str = Form(...),
-    # 🚨 The Guard checks the cookie and hands us the user
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ):
-    """
-    Highly secure route to update a user's password.
-    Requires verification of the current password to prevent unauthorized changes.
-    """
+    """Highly secure route to update a user's password. Requires verification of the user's password to prevent unauthorized changes."""
 
     if new_password != confirm_password:
         return RedirectResponse(url="/settings?msg=password_mismatch", status_code=303)
@@ -563,10 +532,8 @@ def create_transaction(
 ):
     """
     Create a new financial transaction in the Postgres ledger.
-
     Expects a complete Transaction JSON object in the request body.
     Fields marked as Optional in the SQLModel (like 'id' and 'remarks') can be omitted.
-
     Returns the newly created database record, complete with its auto-generated Postgres ID.
     """
 
