@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# --- 1. DYNAMIC CONFIGURATION (Location-Proof) ---
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
 ENV_FILE="$SCRIPT_DIR/../.env"
 
@@ -18,7 +17,6 @@ DB_USER=${DB_USER:-postgres}
 DB_NAME=${DB_NAME:-pig_farm_db}
 DB_PASS=${DB_PASSWORD:-}
 
-# --- 2. FIND CONTAINER ---
 CONTAINER=$(docker ps --format '{{.Names}}' | grep -iE 'postgres|db' | head -n 1)
 
 if [ -z "$CONTAINER" ]; then
@@ -27,15 +25,14 @@ if [ -z "$CONTAINER" ]; then
 fi
 echo "✅ Found database container: $CONTAINER"
 
-# --- 3. CONNECTION TEST (The Fix is right here!) ---
-# Notice we added -d $DB_NAME so it doesn't look for a database called 'farm_user'
+
 if ! docker exec -e PGPASSWORD="$DB_PASS" $CONTAINER psql -U $DB_USER -d $DB_NAME -c "\l" > /dev/null 2>&1; then
     echo "❌ ERROR: Cannot connect! Please check your .env file."
     echo "👉 The script is trying to login as: $DB_USER"
     exit 1
 fi
 
-# --- 4. INTERACTIVE PROMPTS ---
+
 echo "------------------------------------------------"
 read -p "❓ Do you want to backup '$DB_NAME' now? (y/n): " confirm
 if [[ $confirm != [yY] ]]; then
@@ -56,7 +53,7 @@ else
     mkdir -p "$BACKUP_DIR"
 fi
 
-# --- 5. EXECUTE BACKUP ---
+
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 FILENAME="farmos_backup_$TIMESTAMP.sql"
 FILEPATH="$BACKUP_DIR/$FILENAME"
@@ -64,7 +61,7 @@ FILEPATH="$BACKUP_DIR/$FILENAME"
 echo ""
 echo "⏳ Exporting database to $FILEPATH..."
 
-# Removed the -t flag here as well for better Podman compatibility
+
 if docker exec -e PGPASSWORD="$DB_PASS" $CONTAINER pg_dump -U $DB_USER -d $DB_NAME > "$FILEPATH"; then
     echo "🎉 Backup complete and safely stored at: $FILEPATH"
 else

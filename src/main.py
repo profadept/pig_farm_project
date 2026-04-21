@@ -25,8 +25,6 @@ app = FastAPI(
     version="0.1.0",
 )
 
-
-# Declare folders for FastAPI to check
 templates = Jinja2Templates(directory="templates")
 
 
@@ -72,7 +70,6 @@ def get_current_user(
 def get_admin_user(current_user: User = Depends(get_current_user)):
     """The VIP Manager: Only allows users with the ADMIN role to pass."""
 
-    # If their badge says anything other than ADMIN, kick them out!
     if current_user.role != UserRole.ADMIN:
         raise AdminAccessDeniedException()
 
@@ -100,7 +97,6 @@ def redirect_if_authenticated(
         user = session.exec(statement).first()
 
         if user and user.is_active:
-            # We RAISE an exception to instantly halt the route and redirect
             raise HTTPException(
                 status_code=status.HTTP_303_SEE_OTHER,
                 headers={"Location": "/dashboard"},
@@ -221,7 +217,6 @@ def read_root(
         statement = select(User).where(User.username == farm_session)
         current_user = session.exec(statement).first()
 
-    # Hand the web request and the data over to the HTML template
     return templates.TemplateResponse(
         "homepage.html",
         {
@@ -239,7 +234,6 @@ def read_dashboard(
 ):
     """The Secure Ledger. Must have a valid VIP Cookie."""
 
-    # Grab the latest 10 transactions
     statement = select(Transaction).order_by(Transaction.txn_date.desc()).limit(10)
     transactions = session.exec(statement).all()
 
@@ -293,7 +287,6 @@ def process_add_transaction(
 
     total_amount = qty * unit_price
 
-    # Map the validated form data to our strict database blueprint
     new_transaction = Transaction(
         txn_date=txn_date,
         txn_type=txn_type,
@@ -311,7 +304,6 @@ def process_add_transaction(
         user_id=current_user.id,
     )
 
-    # Lock the transaction into the database vault
     session.add(new_transaction)
     session.commit()
 
@@ -333,7 +325,6 @@ def read_ledger(
     Otherwise, returns an empty list to keep the initial page load clean.
     """
 
-    # Check if the user actually clicked 'Filter' with data
     query = select(Transaction)
 
     if start_date and start_date.strip() != "":
@@ -351,7 +342,6 @@ def read_ledger(
         query = query.where(Transaction.payment_status == payment_status)
 
     transactions = session.exec(query.order_by(Transaction.txn_date.desc())).all()
-    print(f"======== DEBUG: Python found {len(transactions)} rows! ========")
 
     return templates.TemplateResponse(
         "ledger.html",
@@ -371,10 +361,8 @@ def show_edit_transaction(
     and hands it to the edit form so Jinja2 can pre-fill the boxes.
     """
 
-    # Grab the specific transaction
     transaction = session.get(Transaction, id)
 
-    # Security check: What if they typed /edit-transaction/999 and it doesn't exist?
     if not transaction:
         raise HTTPException(status_code=404, detail="Transaction not found")
 

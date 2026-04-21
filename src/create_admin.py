@@ -2,16 +2,12 @@ from sqlmodel import Session, select
 from src.database import engine
 from src.models import User, UserRole
 from src.security import hash_password
+import os
 
 
 def create_initial_admin():
     with Session(engine) as session:
-        # 1. Define the ONE username you want to use
-        username = "profadept"
-
-        print(f"Checking if {username} exists...")
-
-        # 2. Check for THAT specific username
+        username = os.getenv("ADMIN_USERNAME")
         existing_user = session.exec(
             select(User).where(User.username == username)
         ).first()
@@ -20,8 +16,7 @@ def create_initial_admin():
             print(f"User '{username}' already exists in the vault!")
             return
 
-        # 3. If not found, proceed to create
-        raw_password = "FarmPassword2026"
+        raw_password = os.getenv("ADMIN_PASSWORD")
         hashed_pw = hash_password(raw_password)
 
         new_admin = User(
@@ -35,7 +30,6 @@ def create_initial_admin():
 
         session.add(new_admin)
         session.commit()
-        print("✅ SUCCESS: Your Admin account has been created.")
 
 
 if __name__ == "__main__":
