@@ -3,7 +3,7 @@
 ## Overview
 FarmOS is an ongoing full-stack Enterprise Resource Planning (ERP) web application designed to transition manual pig farming operations into a secure, data-driven ecosystem. 
 
-The primary objective of this project is to track comprehensive farm data—ranging from financial transactions to livestock lifecycles and supply inventories—to eventually power predictive data analysis. By tracking historical data, the system will forecast feed consumption rates, predict medication requirements, and optimize the overall Feed Conversion Ratio (FCR) to ensure a highly profitable and scalable business model.
+The primary objective of this project is to track comprehensive farm data ranging from financial transactions to livestock lifecycles and supply inventories to eventually power predictive data analysis. By tracking historical data, the system will forecast feed consumption rates, predict medication requirements, and optimize the overall Feed Conversion Ratio (FCR) to ensure a highly profitable and scalable business model.
 
 ## 🛠️ Core Technology Stack
 * **Backend:** Python, FastAPI

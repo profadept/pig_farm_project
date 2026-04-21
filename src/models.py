@@ -12,12 +12,10 @@ class TransactionTypeEnum(str, Enum):
 class CategoryEnum(str, Enum):
     """The upgraded VIP list for strict financial categorization."""
 
-    # Income Categories
     livestock_sales = "Livestock Sales"
     byproduct_sales = "Crop/Byproduct Sales"
     other_income = "Other Income"
 
-    # Expense Categories
     feed = "Feed"
     medicine = "Medicine & Vaccines"
     labor = "Labor"
@@ -51,9 +49,7 @@ class StatusEnum(str, Enum):
 
 
 class UserRole(str, Enum):
-    """
-    Defines the permission levels for system access.
-    """
+    """Defines the permission levels for system access."""
 
     ADMIN = "Admin"
     STAFF = "Staff"
@@ -123,22 +119,17 @@ class PigBreedEnum(str, Enum):
 
 
 class Transaction(SQLModel, table=True):
-    """
-    The Master Accounting Ledger.
-    Tracks all cash flow in and out of the farm with strict data typing.
-    """
+    """The Master Accounting Ledger, Tracks all cash flow in and out of the farm with strict data typing."""
 
     __tablename__ = "farm_transactions"
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    # Core Details
     txn_date: date
     txn_type: TransactionTypeEnum
     category: CategoryEnum
     item_description: str
 
-    # The Math Engine
     qty: float
     unit_of_measure: UnitOfMeasureEnum
     unit_price: float
@@ -146,31 +137,27 @@ class Transaction(SQLModel, table=True):
     amount_paid: float
     payment_status: StatusEnum
 
-    # Database Links & Context
     entity_name: Optional[str] = Field(default=None)
     reference_tag: Optional[str] = Field(default=None)
     remarks: Optional[str] = Field(default=None)
 
     user_id: int | None = Field(default=None, foreign_key="users.id")
 
-    # 2. The Relationship (The magic Python link)
     user: Optional["User"] = Relationship(back_populates="transactions")
 
 
 class User(SQLModel, table=True):
     """
     Represents a registered user in the farm management system.
-
     This table strictly handles authentication (logins) and authorization (roles).
-    General farm clients or vendors should NOT be stored in this table
-    unless they require direct dashboard access.
+    General farm clients or vendors should NOT be stored in this table unless they require direct dashboard access.
     """
 
     __tablename__ = "users"
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    username: str = Field(unique=True, index=True)  # <-- Added your username column!
+    username: str = Field(unique=True, index=True)
     email: str = Field(unique=True, index=True)
     hashed_password: str
 
@@ -182,29 +169,27 @@ class User(SQLModel, table=True):
 
 
 class SupplyInventory(SQLModel, table=True):
-    """Vault 1: The Storehouse for inanimate objects (Feed, Medicine)."""
+    """The Storehouse for inanimate objects (Feed, Medicine)."""
 
     id: Optional[int] = Field(default=None, primary_key=True)
     item_name: str
     category: SupplyCategoryEnum
 
-    # The physical bulk amount you own (e.g., 50)
     total_quantity: float = Field(default=0.0)
-    unit_of_measure: str  # e.g., "Bags", "Bottles", "Packets"
+    unit_of_measure: str
 
     usage_metric: UsageMetricEnum
     conversion_rate: float = Field(default=1.0)
 
-    # The Digital Cable connecting the supply to its usage history
     logs: list["InventoryLog"] = Relationship(back_populates="supply_used")
 
 
 class Livestock(SQLModel, table=True):
-    """Vault 2: The Animals (Individual tracking or Batches)."""
+    """The Animals (Individual tracking or Batches)."""
 
     id: Optional[int] = Field(default=None, primary_key=True)
     tracking_type: TrackingTypeEnum
-    identifier: str  # e.g., "SOW A" or "Male Growers"
+    identifier: str
 
     gender: GenderEnum
     breed: PigBreedEnum = Field(default=PigBreedEnum.OTHER)
@@ -218,7 +203,7 @@ class Livestock(SQLModel, table=True):
 
 
 class InventoryLog(SQLModel, table=True):
-    """Vault 3: The Audit Trail (Tracks every action on the farm)."""
+    """The Audit Trail (Tracks every action on the farm)."""
 
     id: Optional[int] = Field(default=None, primary_key=True)
     log_date: datetime = Field(default_factory=datetime.utcnow)

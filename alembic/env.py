@@ -9,24 +9,18 @@ from alembic import context
 from src.models import SQLModel
 
 
-# 1. IMPORT YOUR BLUEPRINT HERE
-# Note: If your file is named models.py, change "model" to "models"
-
-# this is the Alembic Config object, which provides
-# access to the values within the .ini file in use.
 config = context.config
 
-# Interpret the config file for Python logging.
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# 2. INJECT YOUR SECURE PASSWORDS HERE
+
 DATABASE_URL = os.getenv(
     "DATABASE_URL", "postgresql://farm_user:secret_password@db:5432/pig_farm_db"
 )
 config.set_main_option("sqlalchemy.url", DATABASE_URL)
 
-# 3. HAND THE BLUEPRINT OVER TO ALEMBIC
+
 target_metadata = SQLModel.metadata
 
 
