@@ -1,4 +1,7 @@
 services:
+  # ----------------------------------------
+  # SERVICE 1: THE DATABASE
+  # ----------------------------------------
   db:
     image: docker.io/library/postgres:16
     container_name: farm_postgres
@@ -14,7 +17,9 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-
+  # ----------------------------------------
+  # SERVICE 2: THE FASTAPI APP
+  # ----------------------------------------
   app:
     build: .
     container_name: farm_app
@@ -31,5 +36,8 @@ services:
       - .:/app:z
     command: uv run uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
 
+# ----------------------------------------
+# GLOBAL CONFIGURATIONS
+# ----------------------------------------
 volumes:
   postgres_data:

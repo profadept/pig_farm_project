@@ -26,6 +26,7 @@ app = FastAPI(
 )
 
 
+# Declare folders for FastAPI to check
 templates = Jinja2Templates(directory="templates")
 
 
