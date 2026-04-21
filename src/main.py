@@ -20,8 +20,8 @@ from src.models import (
 
 
 app = FastAPI(
-    title="Pig Farm Accounting API",
-    description="A professional REST API for managing farm transactions and ledger entries.",
+    title="Pig Farm ERP",
+    description="In Progress",
     version="0.1.0",
 )
 
@@ -286,7 +286,6 @@ def process_add_transaction(
         )
 
     total_amount = qty * unit_price
-
     new_transaction = Transaction(
         txn_date=txn_date,
         txn_type=txn_type,

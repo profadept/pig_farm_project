@@ -12,12 +12,10 @@ class TransactionTypeEnum(str, Enum):
 class CategoryEnum(str, Enum):
     """The upgraded VIP list for strict financial categorization."""
 
-    # Income Categories
     livestock_sales = "Livestock Sales"
     byproduct_sales = "Crop/Byproduct Sales"
     other_income = "Other Income"
 
-    # Expense Categories
     feed = "Feed"
     medicine = "Medicine & Vaccines"
     labor = "Labor"
@@ -132,13 +130,11 @@ class Transaction(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    # Core Details
     txn_date: date
     txn_type: TransactionTypeEnum
     category: CategoryEnum
     item_description: str
 
-    # The Math Engine
     qty: float
     unit_of_measure: UnitOfMeasureEnum
     unit_price: float
@@ -146,14 +142,11 @@ class Transaction(SQLModel, table=True):
     amount_paid: float
     payment_status: StatusEnum
 
-    # Database Links & Context
     entity_name: Optional[str] = Field(default=None)
     reference_tag: Optional[str] = Field(default=None)
     remarks: Optional[str] = Field(default=None)
 
     user_id: int | None = Field(default=None, foreign_key="users.id")
-
-    # 2. The Relationship (The magic Python link)
     user: Optional["User"] = Relationship(back_populates="transactions")
 
 
@@ -170,7 +163,7 @@ class User(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    username: str = Field(unique=True, index=True)  # <-- Added your username column!
+    username: str = Field(unique=True, index=True)
     email: str = Field(unique=True, index=True)
     hashed_password: str
 
@@ -188,14 +181,12 @@ class SupplyInventory(SQLModel, table=True):
     item_name: str
     category: SupplyCategoryEnum
 
-    # The physical bulk amount you own (e.g., 50)
     total_quantity: float = Field(default=0.0)
-    unit_of_measure: str  # e.g., "Bags", "Bottles", "Packets"
+    unit_of_measure: str
 
     usage_metric: UsageMetricEnum
     conversion_rate: float = Field(default=1.0)
 
-    # The Digital Cable connecting the supply to its usage history
     logs: list["InventoryLog"] = Relationship(back_populates="supply_used")
 
 
@@ -204,7 +195,7 @@ class Livestock(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     tracking_type: TrackingTypeEnum
-    identifier: str  # e.g., "SOW A" or "Male Growers"
+    identifier: str
 
     gender: GenderEnum
     breed: PigBreedEnum = Field(default=PigBreedEnum.OTHER)

@@ -1,7 +1,6 @@
 from passlib.context import CryptContext
 
-# 1. Initialize the Hashing Engine
-# We use bcrypt because it is slow for hackers to crack but fast for us to use.
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 

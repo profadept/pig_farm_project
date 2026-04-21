@@ -144,7 +144,6 @@
                 bsAlert.close();
                 });
             
-            // Clean the URL so the message doesn't pop up again if they refresh
             if (window.history.replaceState) {
                 const url = new URL(window.location);
                 url.searchParams.delete('msg');

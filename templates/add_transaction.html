@@ -119,25 +119,20 @@
 </div>
 
 <script>
-    // 1. Set today's date automatically
     document.getElementById('txn_date').valueAsDate = new Date();
 
-    // 2. Smart Category Filter
     const typeSelect = document.getElementById('txn_type');
     const categorySelect = document.getElementById('category');
 
     typeSelect.addEventListener('change', function() {
         const isIncome = this.value === 'Income';
         
-        // Hide/Show options based on Type
         document.querySelectorAll('.income-opt').forEach(opt => opt.style.display = isIncome ? 'block' : 'none');
         document.querySelectorAll('.expense-opt').forEach(opt => opt.style.display = isIncome ? 'none' : 'block');
         
-        // Auto-select the first visible option to prevent errors
         categorySelect.value = isIncome ? 'Livestock Sales' : 'Feed';
     });
 
-    // 3. The Math Engine (Calculates Total and Payment Status)
     const qtyInput = document.getElementById('qty');
     const priceInput = document.getElementById('unit_price');
     const totalDisplay = document.getElementById('total_amount_display');
@@ -145,16 +140,13 @@
     const statusSelect = document.getElementById('payment_status');
 
     function calculateMath() {
-        // Get values (default to 0 if empty)
         const qty = parseFloat(qtyInput.value) || 0;
         const price = parseFloat(priceInput.value) || 0;
         const paid = parseFloat(paidInput.value) || 0;
 
-        // Calculate Total
         const total = qty * price;
         totalDisplay.value = total.toFixed(2);
 
-        // Determine Status
         if (paid === 0 && total > 0) {
             statusSelect.value = "Unpaid";
         } else if (paid > 0 && paid < total) {
@@ -166,7 +158,6 @@
         }
     }
 
-    // Run the math every time the user types in these three boxes
     qtyInput.addEventListener('input', calculateMath);
     priceInput.addEventListener('input', calculateMath);
     paidInput.addEventListener('input', calculateMath);
