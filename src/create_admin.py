@@ -1,8 +1,10 @@
+import os
+
 from sqlmodel import Session, select
+
 from src.database import engine
 from src.models import User, UserRole
 from src.security import hash_password
-import os
 
 
 def create_initial_admin():

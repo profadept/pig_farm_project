@@ -1,6 +1,6 @@
 import os
-from sqlmodel import create_engine, SQLModel
 
+from sqlmodel import SQLModel, create_engine
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL", "postgresql://farm_user:farm_password@db:5432/pig_farm_db"

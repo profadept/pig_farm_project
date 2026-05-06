@@ -1,23 +1,21 @@
-from fastapi import FastAPI, Request, Depends, Form, HTTPException, Cookie, status
+from datetime import date, datetime
+
+from fastapi import Cookie, Depends, FastAPI, Form, HTTPException, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlmodel import Session, select
-from datetime import date, datetime
-from typing import Optional
-
 
 from src.database import engine
-from src.security import hash_password, verify_password
 from src.models import (
-    Transaction,
     CategoryEnum,
     StatusEnum,
-    UnitOfMeasureEnum,
+    Transaction,
     TransactionTypeEnum,
+    UnitOfMeasureEnum,
     User,
     UserRole,
 )
-
+from src.security import hash_password, verify_password
 
 app = FastAPI(
     title="Pig Farm ERP",
@@ -269,9 +267,9 @@ def process_add_transaction(
     unit_price: float = Form(...),
     amount_paid: float = Form(...),
     payment_status: StatusEnum = Form(...),
-    entity_name: Optional[str] = Form(None),
-    reference_tag: Optional[str] = Form(None),
-    remarks: Optional[str] = Form(None),
+    entity_name: str | None = Form(None),
+    reference_tag: str | None = Form(None),
+    remarks: str | None = Form(None),
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ):
@@ -312,15 +310,16 @@ def process_add_transaction(
 @app.get("/ledger", response_class=HTMLResponse)
 def read_ledger(
     request: Request,
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None,
-    category: Optional[str] = None,
-    payment_status: Optional[str] = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
+    category: str | None = None,
+    payment_status: str | None = None,
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ):
     """
-    Master Ledger Search Engine. Only queries the database if at least one search parameter is provided.
+    Master Ledger Search Engine.
+    Only queries the database if at least one search parameter is provided.
     Otherwise, returns an empty list to keep the initial page load clean.
     """
 
@@ -383,13 +382,14 @@ def process_edit_transaction(
     unit_price: float = Form(...),
     amount_paid: float = Form(...),
     payment_status: StatusEnum = Form(...),
-    entity_name: Optional[str] = Form(None),
-    reference_tag: Optional[str] = Form(None),
-    remarks: Optional[str] = Form(None),
+    entity_name: str | None = Form(None),
+    reference_tag: str | None = Form(None),
+    remarks: str | None = Form(None),
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ):
-    """Catches the submitted form data, finds the original record, overwrites the old data with the newly typed data, and saves it."""
+    """Catches the submitted form data, finds the original record,
+    overwrites the old data with the newly typed data, and saves it."""
 
     transaction = session.get(Transaction, id)
     if not transaction:
@@ -426,7 +426,8 @@ def view_transaction(
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ):
-    """The View Route (Read)Fetches a single transaction and displays it on a dedicated receipt page."""
+    """The View Route (Read)Fetches a single transaction,
+    and displays it on a dedicated receipt page."""
 
     transaction = session.get(Transaction, id)
     if not transaction:
@@ -444,7 +445,8 @@ def delete_transaction(
     admin_user: User = Depends(get_admin_user),
     session: Session = Depends(get_session),
 ):
-    """The Delete Route (Destroy)Permanently removes a transaction from Postgres and reloads the ledger."""
+    """The Delete Route (Destroy)Permanently
+    removes a transaction from Postgres and reloads the ledger."""
 
     transaction = session.get(Transaction, id)
     if not transaction:
@@ -476,7 +478,9 @@ def update_personal_info(
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ):
-    """Catches the profile update form and saves the new name and email to the database."""
+    """
+    Catches the profile update form and saves the new name and email to the database.
+    """
 
     current_user.full_name = full_name
     current_user.email = email
@@ -495,7 +499,8 @@ def update_password(
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ):
-    """Highly secure route to update a user's password. Requires verification of the user's password to prevent unauthorized changes."""
+    """Highly secure route to update a user's password.
+    Requires verification of the user's password to prevent unauthorized changes."""
 
     if new_password != confirm_password:
         return RedirectResponse(url="/settings?msg=password_mismatch", status_code=303)
@@ -521,7 +526,8 @@ def create_transaction(
     Create a new financial transaction in the Postgres ledger.
     Expects a complete Transaction JSON object in the request body.
     Fields marked as Optional in the SQLModel (like 'id' and 'remarks') can be omitted.
-    Returns the newly created database record, complete with its auto-generated Postgres ID.
+    Returns the newly created database record,
+    complete with its auto-generated Postgres ID.
     """
 
     session.add(transaction)
