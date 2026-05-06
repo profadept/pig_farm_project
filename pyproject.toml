@@ -23,3 +23,29 @@ dev = [
     "pytest-asyncio>=1.3.0",
     "ruff>=0.15.12",
 ]
+
+[tool.ruff]
+line-length = 88
+
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "SIM", "B", "UP"]
+ignore = []
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = [
+    "fastapi.Depends",
+    "fastapi.Form",
+    "fastapi.Cookie",
+    "fastapi.Query",
+    "fastapi.Body",
+    "fastapi.Header",
+    "fastapi.File",
+    "fastapi.Path",
+    "fastapi.Security",
+    "fastapi.params.Depends",
+    ]
+
+[tool.ruff.format]
+quote-style = "double"

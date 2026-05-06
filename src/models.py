@@ -1,15 +1,15 @@
-from enum import Enum
 from datetime import date, datetime
-from typing import Optional
-from sqlmodel import SQLModel, Field, Relationship
+from enum import StrEnum
+
+from sqlmodel import Field, Relationship, SQLModel
 
 
-class TransactionTypeEnum(str, Enum):
+class TransactionTypeEnum(StrEnum):
     income = "Income"
     expense = "Expense"
 
 
-class CategoryEnum(str, Enum):
+class CategoryEnum(StrEnum):
     """The upgraded VIP list for strict financial categorization."""
 
     livestock_sales = "Livestock Sales"
@@ -28,7 +28,7 @@ class CategoryEnum(str, Enum):
     other_expense = "Other Expense"
 
 
-class UnitOfMeasureEnum(str, Enum):
+class UnitOfMeasureEnum(StrEnum):
     """Base metrics to ensure accurate Pandas calculations."""
 
     kg = "kg"
@@ -42,13 +42,13 @@ class UnitOfMeasureEnum(str, Enum):
     grams = "grams"
 
 
-class StatusEnum(str, Enum):
+class StatusEnum(StrEnum):
     paid = "Paid"
     unpaid = "Unpaid"
     partially_paid = "Partially Paid"
 
 
-class UserRole(str, Enum):
+class UserRole(StrEnum):
     """
     Defines the permission levels for system access.
     """
@@ -57,13 +57,13 @@ class UserRole(str, Enum):
     STAFF = "Staff"
 
 
-class SupplyCategoryEnum(str, Enum):
+class SupplyCategoryEnum(StrEnum):
     FEED = "FEED"
     MEDICINE = "MEDICINE"
     EQUIPMENT = "EQUIPMENT"
 
 
-class UsageMetricEnum(str, Enum):
+class UsageMetricEnum(StrEnum):
     BOWLS = "BOWLS"
     ML = "ML"
     KG = "KG"
@@ -72,18 +72,18 @@ class UsageMetricEnum(str, Enum):
     PIECES = "PIECES"
 
 
-class TrackingTypeEnum(str, Enum):
+class TrackingTypeEnum(StrEnum):
     INDIVIDUAL = "INDIVIDUAL"
     BATCH = "BATCH"
 
 
-class GenderEnum(str, Enum):
+class GenderEnum(StrEnum):
     MALE = "MALE"
     FEMALE = "FEMALE"
     MIXED = "MIXED"
 
 
-class LivestockCategoryEnum(str, Enum):
+class LivestockCategoryEnum(StrEnum):
     PIGLET = "PIGLET"
     WEANER = "WEANER"
     GROWER = "GROWER"
@@ -92,7 +92,7 @@ class LivestockCategoryEnum(str, Enum):
     BOAR = "BOAR"
 
 
-class LivestockStatusEnum(str, Enum):
+class LivestockStatusEnum(StrEnum):
     ACTIVE = "ACTIVE"
     PREGNANT = "PREGNANT"
     NURSING = "NURSING"
@@ -101,7 +101,7 @@ class LivestockStatusEnum(str, Enum):
     DECEASED = "DECEASED"
 
 
-class LogActionEnum(str, Enum):
+class LogActionEnum(StrEnum):
     FED = "FED"
     TREATED = "TREATED"
     FARROWED = "FARROWED"
@@ -111,7 +111,7 @@ class LogActionEnum(str, Enum):
     SPLIT = "SPLIT"
 
 
-class PigBreedEnum(str, Enum):
+class PigBreedEnum(StrEnum):
     LARGE_WHITE = "LARGE_WHITE"
     DUROC = "DUROC"
     LANDRACE = "LANDRACE"
@@ -128,7 +128,7 @@ class Transaction(SQLModel, table=True):
 
     __tablename__ = "farm_transactions"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
 
     txn_date: date
     txn_type: TransactionTypeEnum
@@ -142,12 +142,12 @@ class Transaction(SQLModel, table=True):
     amount_paid: float
     payment_status: StatusEnum
 
-    entity_name: Optional[str] = Field(default=None)
-    reference_tag: Optional[str] = Field(default=None)
-    remarks: Optional[str] = Field(default=None)
+    entity_name: str | None = Field(default=None)
+    reference_tag: str | None = Field(default=None)
+    remarks: str | None = Field(default=None)
 
     user_id: int | None = Field(default=None, foreign_key="users.id")
-    user: Optional["User"] = Relationship(back_populates="transactions")
+    user: User | None = Relationship(back_populates="transactions")
 
 
 class User(SQLModel, table=True):
@@ -161,7 +161,7 @@ class User(SQLModel, table=True):
 
     __tablename__ = "users"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
 
     username: str = Field(unique=True, index=True)
     email: str = Field(unique=True, index=True)
@@ -171,13 +171,13 @@ class User(SQLModel, table=True):
     role: UserRole = Field(default=UserRole.STAFF)
     is_active: bool = Field(default=True)
 
-    transactions: list["Transaction"] = Relationship(back_populates="user")
+    transactions: list[Transaction] = Relationship(back_populates="user")
 
 
 class SupplyInventory(SQLModel, table=True):
     """Vault 1: The Storehouse for inanimate objects (Feed, Medicine)."""
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     item_name: str
     category: SupplyCategoryEnum
 
@@ -187,13 +187,13 @@ class SupplyInventory(SQLModel, table=True):
     usage_metric: UsageMetricEnum
     conversion_rate: float = Field(default=1.0)
 
-    logs: list["InventoryLog"] = Relationship(back_populates="supply_used")
+    logs: list[InventoryLog] = Relationship(back_populates="supply_used")
 
 
 class Livestock(SQLModel, table=True):
     """Vault 2: The Animals (Individual tracking or Batches)."""
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     tracking_type: TrackingTypeEnum
     identifier: str
 
@@ -203,27 +203,25 @@ class Livestock(SQLModel, table=True):
 
     quantity: int = Field(default=1)
     status: LivestockStatusEnum = Field(default=LivestockStatusEnum.ACTIVE)
-    lineage_note: Optional[str] = None
+    lineage_note: str | None = None
 
-    logs: list["InventoryLog"] = Relationship(back_populates="livestock")
+    logs: list[InventoryLog] = Relationship(back_populates="livestock")
 
 
 class InventoryLog(SQLModel, table=True):
     """Vault 3: The Audit Trail (Tracks every action on the farm)."""
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     log_date: datetime = Field(default_factory=datetime.utcnow)
     action_type: LogActionEnum
 
-    supply_used_id: Optional[int] = Field(
-        default=None, foreign_key="supplyinventory.id"
-    )
-    livestock_id: Optional[int] = Field(default=None, foreign_key="livestock.id")
+    supply_used_id: int | None = Field(default=None, foreign_key="supplyinventory.id")
+    livestock_id: int | None = Field(default=None, foreign_key="livestock.id")
 
     user_id: int = Field(foreign_key="users.id")
 
-    amount_used: Optional[float] = None
-    remarks: Optional[str] = None
+    amount_used: float | None = None
+    remarks: str | None = None
 
-    supply_used: Optional[SupplyInventory] = Relationship(back_populates="logs")
-    livestock: Optional[Livestock] = Relationship(back_populates="logs")
+    supply_used: SupplyInventory | None = Relationship(back_populates="logs")
+    livestock: Livestock | None = Relationship(back_populates="logs")
