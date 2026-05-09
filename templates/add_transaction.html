@@ -9,7 +9,7 @@
             </div>
             <div class="card-body bg-light">
                 <form action="/add-transaction" method="post">
-                    
+
                     <h5 class="text-primary border-bottom pb-2">1. Core Details</h5>
                     <div class="row mb-3">
                         <div class="col-md-3">
@@ -29,7 +29,7 @@
                                 <option value="Livestock Sales" class="income-opt">Livestock Sales</option>
                                 <option value="Crop/Byproduct Sales" class="income-opt">Crop/Byproduct Sales</option>
                                 <option value="Other Income" class="income-opt">Other Income</option>
-                                
+
                                 <option value="Feed" class="expense-opt" selected>Feed</option>
                                 <option value="Medicine & Vaccines" class="expense-opt">Medicine & Vaccines</option>
                                 <option value="Labor" class="expense-opt">Labor</option>
@@ -126,10 +126,10 @@
 
     typeSelect.addEventListener('change', function() {
         const isIncome = this.value === 'Income';
-        
+
         document.querySelectorAll('.income-opt').forEach(opt => opt.style.display = isIncome ? 'block' : 'none');
         document.querySelectorAll('.expense-opt').forEach(opt => opt.style.display = isIncome ? 'none' : 'block');
-        
+
         categorySelect.value = isIncome ? 'Livestock Sales' : 'Feed';
     });
 

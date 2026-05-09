@@ -20,7 +20,7 @@
                     <label class="form-label fw-bold text-secondary small">End Date</label>
                     <input type="date" class="form-control" name="end_date" value="{{ request.query_params.get('end_date', '') }}">
                 </div>
-                
+
                 <div class="col-md-3">
                     <label class="form-label fw-bold text-secondary small">Category</label>
                     <select class="form-select" name="category">
@@ -44,7 +44,7 @@
                         </optgroup>
                     </select>
                 </div>
-                
+
                 <div class="col-md-3">
                     <label class="form-label fw-bold text-secondary small">Payment Status</label>
                     <select class="form-select" name="payment_status">
@@ -65,14 +65,14 @@
 
 <div class="card shadow-sm border-0">
     <div class="card-body p-0">
-            
+
         {% if transactions|length == 0 %}
             <div class="text-center py-5">
                 <div class="fs-1 mb-3">👻</div>
                 <h4 class="text-secondary">No matching records found.</h4>
                 <p class="text-muted">Try adjusting your filters or date ranges.</p>
             </div>
-            
+
         {% else %}
             <div class="table-responsive">
                 <table class="table table-hover table-striped align-middle mb-0">
@@ -90,11 +90,11 @@
                         {% for transaction in transactions %}
                         <tr>
                             <td>{{ transaction.txn_date }}</td>
-                            
+
                             <td>
                                 <span class="badge bg-secondary">{{ transaction.category.value if transaction.category else transaction.category }}</span>
                             </td>
-                            
+
                             <td>
                                 <strong>{{ transaction.item_description }}</strong><br>
                                 <small class="text-muted">
@@ -102,15 +102,15 @@
                                     <span class="text-primary fw-medium">👤 Logged by: {% if transaction.user %}{{ transaction.user.full_name }}{% else %}System{% endif %}</span>
                                 </small>
                             </td>
-                            
+
                             <td>
                                 <small class="text-muted">{{ transaction.qty }} {{ transaction.unit_of_measure.value if transaction.unit_of_measure else transaction.unit_of_measure }} @ ₦{{ "{:,.2f}".format(transaction.unit_price) }}</small><br>
                                 <strong>₦{{ "{:,.2f}".format(transaction.total_amount) }}</strong>
                             </td>
-                            
+
                             <td>
                                 {% set status_val = transaction.payment_status.value if transaction.payment_status else transaction.payment_status %}
-                                
+
                                 {% if status_val == 'Paid' or status_val == 'Full' %}
                                     <span class="badge bg-success">Paid</span>
                                 {% elif status_val == 'Partially Paid' or status_val == 'Part' %}
@@ -119,13 +119,13 @@
                                     <span class="badge bg-danger">Unpaid</span>
                                 {% endif %}
                             </td>
-                            
+
                             <td class="align-middle text-end pe-3">
                                 <div class="d-inline-flex border rounded bg-white shadow-sm">
                                     <a href="/transaction/{{ transaction.id }}" class="btn btn-light border-0 border-end rounded-0" style="padding: 4px 8px;" title="View Receipt">👁️</a>
-                                    
+
                                     <a href="/edit-transaction/{{ transaction.id }}" class="btn btn-light border-0 border-end rounded-0" style="padding: 4px 8px;" title="Edit Record">✏️</a>
-                                    
+
                                     <form action="/delete-transaction/{{ transaction.id }}" method="POST" class="m-0 p-0 d-flex" onsubmit="return confirm('⚠️ Are you sure?');">
                                         <button type="submit" class="btn btn-light border-0 rounded-0" style="padding: 4px 8px;" title="Delete Record">🗑️</button>
                                     </form>
@@ -143,11 +143,11 @@
 <script>
     // The "Smart Memory" Engine V2
     const currentSearch = window.location.search;
-    
+
     if (currentSearch) {
         const params = new URLSearchParams(currentSearch);
         let hasRealData = false;
-        
+
         for (let [key, value] of params.entries()) {
             if (value.trim() !== '') {
                 hasRealData = true;
@@ -161,7 +161,7 @@
             sessionStorage.removeItem('lastLedgerSearch');
             window.history.replaceState({}, document.title, "/ledger");
         }
-        
+
     } else {
         const savedSearch = sessionStorage.getItem('lastLedgerSearch');
         if (savedSearch) {
