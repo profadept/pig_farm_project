@@ -10,7 +10,7 @@
             </div>
             <div class="card-body bg-light">
                 <form action="/edit-transaction/{{ transaction.id }}" method="post">
-                    
+
                     <h5 class="text-primary border-bottom pb-2">1. Core Details</h5>
                     <div class="row mb-3">
                         <div class="col-md-3">
@@ -30,7 +30,7 @@
                                 <option value="Livestock Sales" class="income-opt" {% if transaction.category.value == 'Livestock Sales' %}selected{% endif %}>Livestock Sales</option>
                                 <option value="Crop/Byproduct Sales" class="income-opt" {% if transaction.category.value == 'Crop/Byproduct Sales' %}selected{% endif %}>Crop/Byproduct Sales</option>
                                 <option value="Other Income" class="income-opt" {% if transaction.category.value == 'Other Income' %}selected{% endif %}>Other Income</option>
-                                
+
                                 <option value="Feed" class="expense-opt" {% if transaction.category.value == 'Feed' %}selected{% endif %}>Feed</option>
                                 <option value="Medicine & Vaccines" class="expense-opt" {% if transaction.category.value == 'Medicine & Vaccines' %}selected{% endif %}>Medicine & Vaccines</option>
                                 <option value="Labor" class="expense-opt" {% if transaction.category.value == 'Labor' %}selected{% endif %}>Labor</option>

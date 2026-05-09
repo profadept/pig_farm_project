@@ -23,7 +23,7 @@
     {% else %}
         {% set total_expense.value = total_expense.value + txn.total_amount %}
     {% endif %}
-    
+
     {% if txn.payment_status.value == 'Unpaid' %}
         {% set unpaid_count.value = unpaid_count.value + 1 %}
     {% endif %}
@@ -39,7 +39,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="col-md-4">
         <div class="card shadow-sm border-0 border-start border-success border-4 h-100">
             <div class="card-body">
@@ -67,7 +67,7 @@
         <a href="/ledger" class="btn btn-sm btn-outline-primary fw-medium">Open Full Ledger</a>
     </div>
     <div class="list-group list-group-flush">
-        
+
         {% for txn in transactions %}
         <div class="list-group-item py-3 px-4 list-group-item-action">
             <div class="d-flex justify-content-between align-items-center">
@@ -78,12 +78,12 @@
                     <div>
                         <h6 class="mb-0 fw-bold text-dark">{{ txn.item_description }}</h6>
                         <small class="text-muted">
-                            {{ txn.txn_date }} • <span class="badge bg-light text-dark border">{{ txn.category.value }}</span> • {{ txn.entity_name or 'Internal' }} 
+                            {{ txn.txn_date }} • <span class="badge bg-light text-dark border">{{ txn.category.value }}</span> • {{ txn.entity_name or 'Internal' }}
                             • <span class="fw-medium text-secondary">👤 {% if txn.user %}{{ txn.user.full_name }}{% else %}System{% endif %}</span>
                         </small>
                     </div>
                 </div>
-                
+
                 <div class="text-end">
                     <h5 class="mb-1 {% if txn.txn_type.value == 'Income' %}text-success{% else %}text-danger{% endif %} fw-bold">
                         {% if txn.txn_type.value == 'Income' %}+{% else %}-{% endif %}₦{{ "{:,.2f}".format(txn.total_amount) }}
@@ -99,7 +99,7 @@
             <p>Your recent transactions will appear here once logged.</p>
         </div>
         {% endfor %}
-        
+
     </div>
 </div>
 {% endblock %}

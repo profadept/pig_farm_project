@@ -3,12 +3,12 @@
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-8">
-        
+
         <div class="d-flex justify-content-between mb-3">
             <a href="/ledger" class="btn btn-outline-secondary shadow-sm">← Back to Ledger</a>
             <div>
                 <a href="/edit-transaction/{{ transaction.id }}" class="btn btn-warning shadow-sm me-2">✏️ Edit</a>
-                
+
                 <button type="button" class="btn btn-danger shadow-sm" data-bs-toggle="modal" data-bs-target="#deleteModal">
                     🗑️ Delete
                 </button>
@@ -23,7 +23,7 @@
             </div>
 
             <div class="card-body p-5">
-                
+
                 <div class="row mb-4 border-bottom pb-4">
                     <div class="col-sm-6">
                         <p class="text-muted mb-1 text-uppercase small fw-bold">Type / Category</p>
@@ -44,12 +44,12 @@
 
                 <div class="bg-light p-4 rounded mb-4">
                     <h6 class="text-muted mb-3 text-uppercase small fw-bold border-bottom pb-2">Item Details</h6>
-                    
+
                     <div class="d-flex justify-content-between mb-2">
                         <span class="fw-bold">{{ transaction.item_description }}</span>
                         <span>{{ transaction.qty }} {{ transaction.unit_of_measure.value }} @ ₦{{ "{:,.2f}".format(transaction.unit_price) }}</span>
                     </div>
-                    
+
                     <div class="d-flex justify-content-between mt-4 pt-3 border-top">
                         <span class="fs-5 fw-bold text-dark">Total Amount</span>
                         <span class="fs-5 fw-bold text-dark">₦{{ "{:,.2f}".format(transaction.total_amount) }}</span>
