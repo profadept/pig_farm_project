@@ -1,5 +1,6 @@
 from datetime import date, datetime
 from enum import StrEnum
+from typing import Optional
 
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -147,7 +148,7 @@ class Transaction(SQLModel, table=True):
     remarks: str | None = Field(default=None)
 
     user_id: int | None = Field(default=None, foreign_key="users.id")
-    user: User | None = Relationship(back_populates="transactions")
+    user: Optional["User"] = Relationship(back_populates="transactions")
 
 
 class User(SQLModel, table=True):
@@ -187,7 +188,7 @@ class SupplyInventory(SQLModel, table=True):
     usage_metric: UsageMetricEnum
     conversion_rate: float = Field(default=1.0)
 
-    logs: list[InventoryLog] = Relationship(back_populates="supply_used")
+    logs: list["InventoryLog"] = Relationship(back_populates="supply_used")
 
 
 class Livestock(SQLModel, table=True):
@@ -205,7 +206,7 @@ class Livestock(SQLModel, table=True):
     status: LivestockStatusEnum = Field(default=LivestockStatusEnum.ACTIVE)
     lineage_note: str | None = None
 
-    logs: list[InventoryLog] = Relationship(back_populates="livestock")
+    logs: list["InventoryLog"] = Relationship(back_populates="livestock")
 
 
 class InventoryLog(SQLModel, table=True):
