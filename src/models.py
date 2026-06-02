@@ -1,4 +1,4 @@
-from datetime import UTC, date, datetime
+from datetime import date, datetime
 from enum import StrEnum
 from typing import Optional
 
@@ -213,7 +213,7 @@ class InventoryLog(SQLModel, table=True):
     """Vault 3: The Audit Trail (Tracks every action on the farm)."""
 
     id: int | None = Field(default=None, primary_key=True)
-    log_date: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    log_date: datetime = Field(default_factory=datetime.utcnow)
     action_type: LogActionEnum
 
     supply_used_id: int | None = Field(default=None, foreign_key="supplyinventory.id")
