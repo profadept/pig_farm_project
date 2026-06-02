@@ -18,9 +18,7 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # 2. INJECT YOUR SECURE PASSWORDS HERE
-DATABASE_URL = os.getenv(
-    "DATABASE_URL", "postgresql://farm_user:secret_password@db:5432/pig_farm_db"
-)
+DATABASE_URL = os.getenv("DATABASE_URL")
 config.set_main_option("sqlalchemy.url", DATABASE_URL)
 
 # 3. HAND THE BLUEPRINT OVER TO ALEMBIC
