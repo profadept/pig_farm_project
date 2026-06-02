@@ -1,13 +1,15 @@
 import os
 
-from sqlmodel import SQLModel, create_engine
+from sqlalchemy.ext.asyncio import create_async_engine
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 DATABASE_URL = os.getenv(
-    "DATABASE_URL", "postgresql://farm_user:farm_password@db:5432/pig_farm_db"
+    "DATABASE_URL", "postgresql+psycopg://farm_user:farm_password@db:5432/pig_farm_db"
 )
 
-engine = create_engine(DATABASE_URL, echo=True)
+engine = create_async_engine(DATABASE_URL, echo=True)
 
 
-def create_db_and_tables():
-    SQLModel.metadata.create_all(engine)
+async def get_session():
+    async with AsyncSession(engine) as session:
+        yield session

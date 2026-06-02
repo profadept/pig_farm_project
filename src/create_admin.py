@@ -1,18 +1,20 @@
+import asyncio
 import os
 
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.database import engine
 from src.models import User, UserRole
 from src.security import hash_password
 
 
-def create_initial_admin():
-    with Session(engine) as session:
+async def create_initial_admin():
+    async with AsyncSession(engine) as session:
         username = os.getenv("ADMIN_USERNAME")
-        existing_user = session.exec(
-            select(User).where(User.username == username)
-        ).first()
+        statement = select(User).where(User.username == username)
+        result = await session.exec(statement)
+        existing_user = result.first()
 
         if existing_user:
             print(f"User '{username}' already exists in the vault!")
@@ -31,8 +33,8 @@ def create_initial_admin():
         )
 
         session.add(new_admin)
-        session.commit()
+        await session.commit()
 
 
 if __name__ == "__main__":
-    create_initial_admin()
+    asyncio.run(create_initial_admin())

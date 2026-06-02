@@ -3,9 +3,11 @@ from datetime import date, datetime
 from fastapi import Cookie, Depends, FastAPI, Form, HTTPException, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-from sqlmodel import Session, select
+from sqlalchemy.orm import selectinload
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
-from src.database import engine
+from src.database import get_session
 from src.models import (
     CategoryEnum,
     StatusEnum,
@@ -32,20 +34,10 @@ class AdminAccessDeniedException(Exception):
     pass
 
 
-def get_session():
-    """Dependency generator to manage database sessions.
-    Yields a secure SQLAlchemy session for the current web request,
-    and automatically closes the connection when the request is finished.
-    """
-
-    with Session(engine) as session:
-        yield session
-
-
-def get_current_user(
+async def get_current_user(
     request: Request,
     farm_session: str | None = Cookie(None),
-    session: Session = Depends(get_session),
+    session: AsyncSession = Depends(get_session),
 ):
     """Check for a valid cookie before letting anyone pass"""
 
@@ -55,7 +47,8 @@ def get_current_user(
         )
 
     statement = select(User).where(User.username == farm_session)
-    user = session.exec(statement).first()
+    result = await session.exec(statement)
+    user = result.first()
 
     if not user or not user.is_active:
         raise HTTPException(
@@ -85,14 +78,16 @@ async def admin_access_denied_handler(
     return RedirectResponse(url="/ledger?msg=denied", status_code=303)
 
 
-def redirect_if_authenticated(
-    farm_session: str | None = Cookie(None), session: Session = Depends(get_session)
+async def redirect_if_authenticated(
+    farm_session: str | None = Cookie(None),
+    session: AsyncSession = Depends(get_session),
 ):
     """The Anti-Bouncer: If you already have a VIP badge, you cannot enter here."""
 
     if farm_session:
         statement = select(User).where(User.username == farm_session)
-        user = session.exec(statement).first()
+        result = await session.exec(statement)
+        user = result.first()
 
         if user and user.is_active:
             raise HTTPException(
@@ -102,10 +97,10 @@ def redirect_if_authenticated(
 
 
 @app.get("/register")
-def show_register_page(
+async def show_register_page(
     request: Request,
     farm_session: str | None = Cookie(None),
-    session: Session = Depends(get_session),
+    session: AsyncSession = Depends(get_session),
     _guard: None = Depends(redirect_if_authenticated),
 ):
     """Sends the register.html form page, but redirects if already logged in."""
@@ -114,18 +109,20 @@ def show_register_page(
 
 
 @app.post("/register")
-def process_registration(
+async def process_registration(
     request: Request,
     full_name: str = Form(...),
     email: str = Form(...),
     username: str = Form(...),
     password: str = Form(...),
-    session: Session = Depends(get_session),
+    session: AsyncSession = Depends(get_session),
 ):
     """Catches the form data, checks for duplicates and saves the user."""
 
     statement = select(User).where((User.username == username) | (User.email == email))
-    existing_user = session.exec(statement).first()
+    result = await session.exec(statement)
+    existing_user = result.first()
+
     if existing_user:
         return templates.TemplateResponse(
             "register.html",
@@ -146,16 +143,16 @@ def process_registration(
     )
 
     session.add(new_user)
-    session.commit()
+    await session.commit()
 
     return RedirectResponse(url="/login?msg=registered", status_code=303)
 
 
 @app.get("/login")
-def login_route(
+async def login_route(
     request: Request,
     farm_session: str | None = Cookie(None),
-    session: Session = Depends(get_session),
+    session: AsyncSession = Depends(get_session),
     _guard: None = Depends(redirect_if_authenticated),
 ):
     """Route users to the login html page, but redirects if already logged in."""
@@ -164,21 +161,21 @@ def login_route(
 
 
 @app.post("/login")
-def process_login(
+async def process_login(
     request: Request,
     username: str = Form(...),
     password: str = Form(...),
-    session: Session = Depends(get_session),
+    session: AsyncSession = Depends(get_session),
 ):
     """Verfies the password and hands out the VIP Cookie."""
 
     statement = select(User).where(User.username == username)
-    user = session.exec(statement).first()
-    user_pass = verify_password(password, user.hashed_password)
+    result = await session.exec(statement)
+    user = result.first()
 
-    if not user or not user_pass:
+    if not user or not verify_password(password, user.hashed_password):
         return templates.TemplateResponse(
-            "/login.html",
+            "login.html",
             {
                 "request": request,
                 "error": "Invalid Username or Password. Please Try Again.",
@@ -203,17 +200,18 @@ def logout_user():
 
 
 @app.get("/", response_class=HTMLResponse)
-def read_root(
+async def read_root(
     request: Request,
     farm_session: str | None = Cookie(None),
-    session: Session = Depends(get_session),
+    session: AsyncSession = Depends(get_session),
 ):
     """The Public StoreFront. AnyOne can see this"""
 
     current_user = None
     if farm_session:
         statement = select(User).where(User.username == farm_session)
-        current_user = session.exec(statement).first()
+        result = await session.exec(statement)
+        current_user = result.first()
 
     return templates.TemplateResponse(
         "homepage.html",
@@ -225,15 +223,21 @@ def read_root(
 
 
 @app.get("/dashboard")
-def read_dashboard(
+async def read_dashboard(
     request: Request,
     current_user: User = Depends(get_current_user),
-    session: Session = Depends(get_session),
+    session: AsyncSession = Depends(get_session),
 ):
     """The Secure Ledger. Must have a valid VIP Cookie."""
 
-    statement = select(Transaction).order_by(Transaction.txn_date.desc()).limit(10)
-    transactions = session.exec(statement).all()
+    statement = (
+        select(Transaction)
+        .options(selectinload(Transaction.user))
+        .order_by(Transaction.txn_date.desc())
+        .limit(10)
+    )
+    results = await session.exec(statement)
+    transactions = results.all()
 
     return templates.TemplateResponse(
         "index.html",
@@ -257,7 +261,7 @@ def show_add_transaction(
 
 
 @app.post("/add-transaction", response_class=RedirectResponse)
-def process_add_transaction(
+async def process_add_transaction(
     txn_date: date = Form(...),
     txn_type: TransactionTypeEnum = Form(...),
     category: CategoryEnum = Form(...),
@@ -271,7 +275,7 @@ def process_add_transaction(
     reference_tag: str | None = Form(None),
     remarks: str | None = Form(None),
     current_user: User = Depends(get_current_user),
-    session: Session = Depends(get_session),
+    session: AsyncSession = Depends(get_session),
 ):
     """
     Intercepts the HTML form submission, validates the financial metrics securely
@@ -302,20 +306,20 @@ def process_add_transaction(
     )
 
     session.add(new_transaction)
-    session.commit()
+    await session.commit()
 
     return RedirectResponse(url="/?msg=saved", status_code=303)
 
 
 @app.get("/ledger", response_class=HTMLResponse)
-def read_ledger(
+async def read_ledger(
     request: Request,
     start_date: str | None = None,
     end_date: str | None = None,
     category: str | None = None,
     payment_status: str | None = None,
     current_user: User = Depends(get_current_user),
-    session: Session = Depends(get_session),
+    session: AsyncSession = Depends(get_session),
 ):
     """
     Master Ledger Search Engine.
@@ -323,7 +327,7 @@ def read_ledger(
     Otherwise, returns an empty list to keep the initial page load clean.
     """
 
-    query = select(Transaction)
+    query = select(Transaction).options(selectinload(Transaction.user))
 
     if start_date and start_date.strip() != "":
         parsed_start = datetime.strptime(start_date, "%Y-%m-%d").date()
@@ -339,7 +343,9 @@ def read_ledger(
     if payment_status and payment_status.strip() != "":
         query = query.where(Transaction.payment_status == payment_status)
 
-    transactions = session.exec(query.order_by(Transaction.txn_date.desc())).all()
+    statement = query.order_by(Transaction.txn_date.desc())
+    results = await session.exec(statement)
+    transactions = results.all()
 
     return templates.TemplateResponse(
         "ledger.html",
@@ -348,10 +354,10 @@ def read_ledger(
 
 
 @app.get("/edit-transaction/{id}", response_class=HTMLResponse)
-def show_edit_transaction(
+async def show_edit_transaction(
     id: int,
     request: Request,
-    session: Session = Depends(get_session),
+    session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
     """
@@ -359,7 +365,7 @@ def show_edit_transaction(
     and hands it to the edit form so Jinja2 can pre-fill the boxes.
     """
 
-    transaction = session.get(Transaction, id)
+    transaction = await session.get(Transaction, id)
 
     if not transaction:
         raise HTTPException(status_code=404, detail="Transaction not found")
@@ -371,7 +377,7 @@ def show_edit_transaction(
 
 
 @app.post("/edit-transaction/{id}", response_class=RedirectResponse)
-def process_edit_transaction(
+async def process_edit_transaction(
     id: int,
     txn_date: date = Form(...),
     txn_type: TransactionTypeEnum = Form(...),
@@ -386,12 +392,13 @@ def process_edit_transaction(
     reference_tag: str | None = Form(None),
     remarks: str | None = Form(None),
     current_user: User = Depends(get_current_user),
-    session: Session = Depends(get_session),
+    session: AsyncSession = Depends(get_session),
 ):
     """Catches the submitted form data, finds the original record,
     overwrites the old data with the newly typed data, and saves it."""
 
-    transaction = session.get(Transaction, id)
+    transaction = await session.get(Transaction, id)
+
     if not transaction:
         raise HTTPException(status_code=404, detail="Transaction not found")
 
@@ -415,21 +422,22 @@ def process_edit_transaction(
     transaction.remarks = remarks
 
     session.add(transaction)
-    session.commit()
+    await session.commit()
     return RedirectResponse(url="/ledger?msg=edited", status_code=303)
 
 
 @app.get("/transaction/{id}", response_class=HTMLResponse)
-def view_transaction(
+async def view_transaction(
     id: int,
     request: Request,
     current_user: User = Depends(get_current_user),
-    session: Session = Depends(get_session),
+    session: AsyncSession = Depends(get_session),
 ):
     """The View Route (Read)Fetches a single transaction,
     and displays it on a dedicated receipt page."""
 
-    transaction = session.get(Transaction, id)
+    transaction = await session.get(Transaction, id)
+
     if not transaction:
         raise HTTPException(status_code=404, detail="Transaction not found")
 
@@ -440,20 +448,20 @@ def view_transaction(
 
 
 @app.post("/delete-transaction/{id}", response_class=RedirectResponse)
-def delete_transaction(
+async def delete_transaction(
     id: int,
     admin_user: User = Depends(get_admin_user),
-    session: Session = Depends(get_session),
+    session: AsyncSession = Depends(get_session),
 ):
     """The Delete Route (Destroy)Permanently
     removes a transaction from Postgres and reloads the ledger."""
 
-    transaction = session.get(Transaction, id)
+    transaction = await session.get(Transaction, id)
     if not transaction:
         raise HTTPException(status_code=404, detail="Transaction not found")
 
-    session.delete(transaction)
-    session.commit()
+    await session.delete(transaction)
+    await session.commit()
 
     return RedirectResponse(url="/ledger?msg=deleted", status_code=303)
 
@@ -462,7 +470,7 @@ def delete_transaction(
 def show_settings_page(
     request: Request,
     current_user: User = Depends(get_current_user),
-    session: Session = Depends(get_session),
+    session: AsyncSession = Depends(get_session),
 ):
     """Sees the user profile and settings dashboard."""
 
@@ -472,11 +480,11 @@ def show_settings_page(
 
 
 @app.post("/settings/update-info", response_class=RedirectResponse)
-def update_personal_info(
+async def update_personal_info(
     full_name: str = Form(...),
     email: str = Form(...),
     current_user: User = Depends(get_current_user),
-    session: Session = Depends(get_session),
+    session: AsyncSession = Depends(get_session),
 ):
     """
     Catches the profile update form and saves the new name and email to the database.
@@ -486,18 +494,18 @@ def update_personal_info(
     current_user.email = email
 
     session.add(current_user)
-    session.commit()
+    await session.commit()
 
     return RedirectResponse(url="/settings?msg=updated", status_code=303)
 
 
 @app.post("/settings/update-password", response_class=RedirectResponse)
-def update_password(
+async def update_password(
     current_password: str = Form(...),
     new_password: str = Form(...),
     confirm_password: str = Form(...),
     current_user: User = Depends(get_current_user),
-    session: Session = Depends(get_session),
+    session: AsyncSession = Depends(get_session),
 ):
     """Highly secure route to update a user's password.
     Requires verification of the user's password to prevent unauthorized changes."""
@@ -511,16 +519,16 @@ def update_password(
     current_user.hashed_password = hash_password(new_password)
 
     session.add(current_user)
-    session.commit()
+    await session.commit()
 
     return RedirectResponse(url="/settings?msg=password_updated", status_code=303)
 
 
 @app.post("/transactions/", response_model=Transaction)
-def create_transaction(
+async def create_transaction(
     transaction: Transaction,
     current_user: User = Depends(get_current_user),
-    session: Session = Depends(get_session),
+    session: AsyncSession = Depends(get_session),
 ):
     """
     Create a new financial transaction in the Postgres ledger.
@@ -531,18 +539,19 @@ def create_transaction(
     """
 
     session.add(transaction)
-    session.commit()
-    session.refresh(transaction)
+    await session.commit()
+    await session.refresh(transaction)
 
     return transaction
 
 
 @app.get("/transactions/", response_model=list[Transaction])
-def read_transactions(
+async def read_transactions(
     current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
 ):
+    statement = select(Transaction)
+    results = await session.exec(statement)
+    output = results.all()
 
-    with Session(engine) as session:
-        statement = select(Transaction)
-        results = session.exec(statement).all()
-        return results
+    return output
