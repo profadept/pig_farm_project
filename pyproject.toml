@@ -34,7 +34,7 @@ select = ["E", "F", "W", "I", "SIM", "B", "UP"]
 ignore = []
 
 [tool.ruff.lint.per-file-ignores]
-"src/models.py" = ["UP045", "UP037"]
+"src/models/*.py" = ["UP045", "UP037"]
 
 [tool.ruff.lint.flake8-bugbear]
 extend-immutable-calls = [
