@@ -27,7 +27,7 @@
                         <option value="">-- All Categories --</option>
                         <optgroup label="Income">
                             <option value="livestock_sales" {% if request.query_params.get('category') == 'livestock_sales' %}selected{% endif %}>Livestock Sales</option>
-                            <option value="crop_sales" {% if request.query_params.get('category') == 'crop_sales' %}selected{% endif %}>Crop/Byproduct Sales</option>
+                            <option value="byproduct_sales" {% if request.query_params.get('category') == 'byproduct_sales' %}selected{% endif %}>Crop/Byproduct Sales</option>
                             <option value="other_income" {% if request.query_params.get('category') == 'other_income' %}selected{% endif %}>Other Income</option>
                         </optgroup>
                         <optgroup label="Expense">
@@ -49,9 +49,9 @@
                     <label class="form-label fw-bold text-secondary small">Payment Status</label>
                     <select class="form-select" name="payment_status">
                         <option value="">-- All Statuses --</option>
-                        <option value="Full" {% if request.query_params.get('payment_status') == 'Full' %}selected{% endif %}>Paid in Full</option>
-                        <option value="Part" {% if request.query_params.get('payment_status') == 'Part' %}selected{% endif %}>Partially Paid</option>
-                        <option value="Unpaid" {% if request.query_params.get('payment_status') == 'Unpaid' %}selected{% endif %}>Unpaid</option>
+                        <option value="paid" {% if request.query_params.get('payment_status') == 'paid' %}selected{% endif %}>Paid in Full</option>
+                        <option value="partially_paid" {% if request.query_params.get('payment_status') == 'partially_paid' %}selected{% endif %}>Partially Paid</option>
+                        <option value="unpaid" {% if request.query_params.get('payment_status') == 'unpaid' %}selected{% endif %}>Unpaid</option>
                     </select>
                 </div>
                 <div class="col-md-2 text-end">
