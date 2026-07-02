@@ -11,6 +11,9 @@ setup: ## Bootstrap a fresh clone: install deps and pre-commit hooks
 lint: ## Run ruff lint check
 	uv run ruff check .
 
+fix: ## Auto-fix lint issues (import sorting, safe fixes)
+	uv run ruff check --fix .
+
 format: ## Reformat code with ruff
 	uv run ruff format .
 
