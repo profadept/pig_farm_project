@@ -17,6 +17,7 @@ from src.models import (
     User,
     UserRole,
 )
+from src.schemas.transaction import TransactionCreate, TransactionRead
 from src.security import hash_password, verify_password
 
 app = FastAPI(
@@ -524,28 +525,37 @@ async def update_password(
     return RedirectResponse(url="/settings?msg=password_updated", status_code=303)
 
 
-@app.post("/transactions/", response_model=Transaction)
+@app.post("/transactions/", response_model=TransactionRead)
 async def create_transaction(
-    transaction: Transaction,
+    transaction: TransactionCreate,
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    """
-    Create a new financial transaction in the Postgres ledger.
-    Expects a complete Transaction JSON object in the request body.
-    Fields marked as Optional in the SQLModel (like 'id' and 'remarks') can be omitted.
-    Returns the newly created database record,
-    complete with its auto-generated Postgres ID.
-    """
+    total_amount = transaction.qty * transaction.unit_price
+    if transaction.amount_paid == 0 and total_amount > 0:
+        payment_status = StatusEnum.unpaid
+    elif transaction.amount_paid > 0 and transaction.amount_paid < total_amount:
+        payment_status = StatusEnum.partially_paid
+    elif transaction.amount_paid >= total_amount and total_amount > 0:
+        payment_status = StatusEnum.paid
+    else:
+        payment_status = StatusEnum.unpaid
 
-    session.add(transaction)
+    new_transaction = Transaction(
+        **transaction.model_dump(),
+        total_amount=total_amount,
+        payment_status=payment_status,
+        user_id=current_user.id,
+    )
+
+    session.add(new_transaction)
     await session.commit()
-    await session.refresh(transaction)
+    await session.refresh(new_transaction)
 
-    return transaction
+    return new_transaction
 
 
-@app.get("/transactions/", response_model=list[Transaction])
+@app.get("/transactions/", response_model=list[TransactionRead])
 async def read_transactions(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
