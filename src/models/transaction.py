@@ -49,7 +49,23 @@ class StatusEnum(StrEnum):
     partially_paid = "Partially Paid"
 
 
-class Transaction(SQLModel, table=True):
+class TransactionBase(SQLModel):
+    txn_date: date
+    txn_type: TransactionTypeEnum
+    category: CategoryEnum
+    item_description: str
+
+    qty: float
+    unit_of_measure: UnitOfMeasureEnum
+    unit_price: float
+    amount_paid: float
+
+    entity_name: str | None = Field(default=None)
+    reference_tag: str | None = Field(default=None)
+    remarks: str | None = Field(default=None)
+
+
+class Transaction(TransactionBase, table=True):
     """
     The Master Accounting Ledger.
     Tracks all cash flow in and out of the farm with strict data typing.
@@ -59,22 +75,8 @@ class Transaction(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
 
-    txn_date: date
-    txn_type: TransactionTypeEnum
-    category: CategoryEnum
-    item_description: str
-
-    qty: float
-    unit_of_measure: UnitOfMeasureEnum
-    unit_price: float
     total_amount: float
-    amount_paid: float
     payment_status: StatusEnum
 
-    entity_name: str | None = Field(default=None)
-    reference_tag: str | None = Field(default=None)
-    remarks: str | None = Field(default=None)
-
     user_id: int | None = Field(default=None, foreign_key="users.id")
-
     user: Optional["User"] = Relationship(back_populates="transactions")  # noqa: F821
