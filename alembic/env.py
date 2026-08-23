@@ -2,9 +2,10 @@ import os
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config, pool
+from sqlmodel import SQLModel
 
+import src.models  # noqa: F401
 from alembic import context
-from src.models import SQLModel
 
 # 1. IMPORT YOUR BLUEPRINT HERE
 # Note: If your file is named models.py, change "model" to "models"
