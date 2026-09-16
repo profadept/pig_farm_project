@@ -50,3 +50,6 @@ Branches deferred to be picked up later.
   feat/add-services extracts registration logic and needs a clean
   input/output contract. Build and test them together with that
   consumer, not speculatively ahead of it.
+- All templates.TemplateResponse(name, {"request": ...}) calls in main.py
+  use deprecated argument order. Update to TemplateResponse(request, name)
+  across every route. Mechanical, touches ~15 call sites.
