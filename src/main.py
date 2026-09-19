@@ -10,7 +10,6 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from src.database import get_session
 from src.models import (
     CategoryEnum,
-    StatusEnum,
     Transaction,
     TransactionTypeEnum,
     UnitOfMeasureEnum,
@@ -19,6 +18,7 @@ from src.models import (
 )
 from src.schemas.transaction import TransactionCreate, TransactionRead
 from src.security import hash_password, verify_password
+from src.services.transaction import compute_transaction_totals
 
 app = FastAPI(
     title="Pig Farm ERP",
@@ -271,7 +271,6 @@ async def process_add_transaction(
     unit_of_measure: UnitOfMeasureEnum = Form(...),
     unit_price: float = Form(...),
     amount_paid: float = Form(...),
-    payment_status: StatusEnum = Form(...),
     entity_name: str | None = Form(None),
     reference_tag: str | None = Form(None),
     remarks: str | None = Form(None),
@@ -282,13 +281,15 @@ async def process_add_transaction(
     Intercepts the HTML form submission, validates the financial metrics securely
     on the backend, and commits the new transaction to the PostgreSQL ledger.
     """
-
-    if qty < 0 or unit_price < 0 or amount_paid < 0:
-        raise HTTPException(
-            status_code=400, detail="Financial values cannot be negative."
+    try:
+        total_amount, payment_status = compute_transaction_totals(
+            qty=qty,
+            unit_price=unit_price,
+            amount_paid=amount_paid,
         )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
-    total_amount = qty * unit_price
     new_transaction = Transaction(
         txn_date=txn_date,
         txn_type=txn_type,
@@ -388,7 +389,6 @@ async def process_edit_transaction(
     unit_of_measure: UnitOfMeasureEnum = Form(...),
     unit_price: float = Form(...),
     amount_paid: float = Form(...),
-    payment_status: StatusEnum = Form(...),
     entity_name: str | None = Form(None),
     reference_tag: str | None = Form(None),
     remarks: str | None = Form(None),
@@ -403,10 +403,12 @@ async def process_edit_transaction(
     if not transaction:
         raise HTTPException(status_code=404, detail="Transaction not found")
 
-    if qty < 0 or unit_price < 0 or amount_paid < 0:
-        raise HTTPException(
-            status_code=400, detail="Financial values cannot be negative."
+    try:
+        total_amount, payment_status = compute_transaction_totals(
+            qty=qty, unit_price=unit_price, amount_paid=amount_paid
         )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
     transaction.txn_date = txn_date
     transaction.txn_type = txn_type
@@ -415,7 +417,7 @@ async def process_edit_transaction(
     transaction.qty = qty
     transaction.unit_of_measure = unit_of_measure
     transaction.unit_price = unit_price
-    transaction.total_amount = qty * unit_price
+    transaction.total_amount = total_amount
     transaction.amount_paid = amount_paid
     transaction.payment_status = payment_status
     transaction.entity_name = entity_name
@@ -531,15 +533,15 @@ async def create_transaction(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    total_amount = transaction.qty * transaction.unit_price
-    if transaction.amount_paid == 0 and total_amount > 0:
-        payment_status = StatusEnum.unpaid
-    elif transaction.amount_paid > 0 and transaction.amount_paid < total_amount:
-        payment_status = StatusEnum.partially_paid
-    elif transaction.amount_paid >= total_amount and total_amount > 0:
-        payment_status = StatusEnum.paid
-    else:
-        payment_status = StatusEnum.unpaid
+
+    try:
+        total_amount, payment_status = compute_transaction_totals(
+            qty=transaction.qty,
+            unit_price=transaction.unit_price,
+            amount_paid=transaction.amount_paid,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
     new_transaction = Transaction(
         **transaction.model_dump(),

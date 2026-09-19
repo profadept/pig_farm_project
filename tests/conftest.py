@@ -8,6 +8,8 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.database import get_session
 from src.main import app
+from src.models.user import User, UserRole
+from src.security import hash_password
 
 load_dotenv()
 
@@ -24,9 +26,12 @@ async def test_engine():
 
 @pytest_asyncio.fixture(scope="function")
 async def test_session(test_engine):
-    async with AsyncSession(test_engine) as session:
+    async with test_engine.connect() as connection, connection.begin():
+        session = AsyncSession(
+            bind=connection, join_transaction_mode="create_savepoint"
+        )
         yield session
-        await session.rollback()
+        await connection.rollback()
 
 
 @pytest_asyncio.fixture(scope="function")
@@ -38,3 +43,31 @@ async def client(test_session):
         yield ac
 
     app.dependency_overrides.clear()
+
+
+@pytest_asyncio.fixture(scope="function")
+async def test_user(test_session):
+
+    new_user = User(
+        username="test_user",
+        email="test_user123@gmail.com",
+        hashed_password=hash_password("password12345"),
+        full_name="Testin Name",
+        role=UserRole.ADMIN,
+        is_active=True,
+    )
+
+    test_session.add(new_user)
+    await test_session.flush()
+
+    yield
+
+
+@pytest_asyncio.fixture(scope="function")
+async def test_login(client, test_user):
+    login_response = await client.post(
+        "/login", data={"username": "test_user", "password": "password12345"}
+    )
+
+    assert login_response.status_code == 303
+    yield client
