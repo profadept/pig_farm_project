@@ -53,3 +53,5 @@ Branches deferred to be picked up later.
 - All templates.TemplateResponse(name, {"request": ...}) calls in main.py
   use deprecated argument order. Update to TemplateResponse(request, name)
   across every route. Mechanical, touches ~15 call sites.
+
+- Remove hardcoded Backup folder full path in backup_auto.sh
