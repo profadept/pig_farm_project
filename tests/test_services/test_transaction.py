@@ -25,3 +25,13 @@ def test_compute_totals_unpaid():
 def test_compute_totals_negative_raises():
     with pytest.raises(ValueError):
         compute_transaction_totals(qty=-1, unit_price=100, amount_paid=0)
+
+
+def test_compute_totals_zero_raises():
+    with pytest.raises(ValueError, match="greater than zero"):
+        compute_transaction_totals(qty=10, unit_price=0, amount_paid=100)
+
+
+def test_compute_totals_overpaid_raises():
+    with pytest.raises(ValueError, match="cannot exceed"):
+        compute_transaction_totals(qty=5, unit_price=100, amount_paid=600)
