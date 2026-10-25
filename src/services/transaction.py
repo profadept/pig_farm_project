@@ -8,13 +8,16 @@ def compute_transaction_totals(qty, unit_price, amount_paid):
 
     total_amount = qty * unit_price
 
-    if amount_paid == 0 and total_amount > 0:
+    if total_amount == 0:
+        raise ValueError("Total amount must be greater than zero")
+    if amount_paid > total_amount:
+        raise ValueError("Amount paid cannot exceed total amount")
+
+    if amount_paid == 0:
         payment_status = StatusEnum.unpaid
-    elif amount_paid > 0 and amount_paid < total_amount:
+    elif amount_paid < total_amount:
         payment_status = StatusEnum.partially_paid
-    elif amount_paid >= total_amount and total_amount > 0:
-        payment_status = StatusEnum.paid
     else:
-        payment_status = StatusEnum.unpaid
+        payment_status = StatusEnum.paid
 
     return total_amount, payment_status
