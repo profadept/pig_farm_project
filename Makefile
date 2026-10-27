@@ -1,6 +1,7 @@
 .PHONY: setup lint format format-check test help check
 
-COMPOSE = podman compose
+ENGINE ?= podman
+COMPOSE ?= $(ENGINE) compose
 APP_CONTAINER = farm_app
 DB_CONTAINER = farm_postgres
 
@@ -38,19 +39,19 @@ logs: ## Stream logs from all containers
 	$(COMPOSE) logs -f
 
 app-logs: ## Stream app container logs
-	podman logs -f $(APP_CONTAINER)
+	$(ENGINE) logs -f $(APP_CONTAINER)
 
 db-logs: ## Stream db container logs
-	podman logs -f $(DB_CONTAINER)
+	$(ENGINE) logs -f $(DB_CONTAINER)
 
 app-shell: ## Shell into the app container
-	podman exec -it $(APP_CONTAINER) /bin/bash
+	$(ENGINE) exec -it $(APP_CONTAINER) /bin/bash
 
 db-shell: ## Open psql shell in db container
-	podman exec -it $(DB_CONTAINER) psql -U farm_user -d pig_farm_db
+	$(ENGINE) exec -it $(DB_CONTAINER) psql -U farm_user -d pig_farm_db
 
 migrate: ## Apply alembic migrations
-	podman exec -it $(APP_CONTAINER) alembic upgrade head
+	$(ENGINE) exec -it $(APP_CONTAINER) alembic upgrade head
 
 help: ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-15s %s\n", $$1, $$2}'
