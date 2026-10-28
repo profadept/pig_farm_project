@@ -7,6 +7,10 @@ Branches deferred to be picked up later.
   forces SIGKILL after 10s. Caused by --reload spawning a child process
   plus how uv run wraps the command. Investigate Dockerfile CMD vs
   docker-compose command: field.
+- fix/signed-session-cookie — SECURITY: farm_session cookie is the raw
+  username, unsigned. Anyone on the LAN can forge it and log in as any
+  user, including admin. Sign the cookie or use a random session token.
+  Do before exposing the app beyond trusted users.
 
 ## Phase 3 (in progress)
 - feat/add-pydantic-schemas — separate request/response models from
