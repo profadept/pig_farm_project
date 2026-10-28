@@ -28,7 +28,9 @@ async def test_engine():
 async def test_session(test_engine):
     async with test_engine.connect() as connection, connection.begin():
         session = AsyncSession(
-            bind=connection, join_transaction_mode="create_savepoint"
+            bind=connection,
+            join_transaction_mode="create_savepoint",
+            expire_on_commit=False,
         )
         yield session
         await connection.rollback()
@@ -60,7 +62,7 @@ async def test_user(test_session):
     test_session.add(new_user)
     await test_session.flush()
 
-    yield
+    return new_user
 
 
 @pytest_asyncio.fixture(scope="function")
