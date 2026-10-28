@@ -18,7 +18,7 @@ from src.models import (
 )
 from src.schemas.transaction import TransactionCreate, TransactionRead
 from src.security import hash_password, verify_password
-from src.services.transaction import compute_transaction_totals
+from src.services.transaction import compute_transaction_totals, create_transaction
 
 app = FastAPI(
     title="Pig Farm ERP",
@@ -278,19 +278,11 @@ async def process_add_transaction(
     session: AsyncSession = Depends(get_session),
 ):
     """
-    Intercepts the HTML form submission, validates the financial metrics securely
-    on the backend, and commits the new transaction to the PostgreSQL ledger.
+    Intercepts the HTML form submission, converts the form into a
+    transaction and redirects new transaction to the PostgreSQL ledger.
     """
-    try:
-        total_amount, payment_status = compute_transaction_totals(
-            qty=qty,
-            unit_price=unit_price,
-            amount_paid=amount_paid,
-        )
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
 
-    new_transaction = Transaction(
+    data = TransactionCreate(
         txn_date=txn_date,
         txn_type=txn_type,
         category=category,
@@ -298,17 +290,16 @@ async def process_add_transaction(
         qty=qty,
         unit_of_measure=unit_of_measure,
         unit_price=unit_price,
-        total_amount=total_amount,
         amount_paid=amount_paid,
-        payment_status=payment_status,
         entity_name=entity_name,
         reference_tag=reference_tag,
         remarks=remarks,
-        user_id=current_user.id,
     )
 
-    session.add(new_transaction)
-    await session.commit()
+    try:
+        await create_transaction(session=session, data=data, user_id=current_user.id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
     return RedirectResponse(url="/?msg=saved", status_code=303)
 
@@ -528,31 +519,17 @@ async def update_password(
 
 
 @app.post("/transactions/", response_model=TransactionRead)
-async def create_transaction(
+async def create_transaction_endpoint(
     transaction: TransactionCreate,
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-
     try:
-        total_amount, payment_status = compute_transaction_totals(
-            qty=transaction.qty,
-            unit_price=transaction.unit_price,
-            amount_paid=transaction.amount_paid,
+        new_transaction = await create_transaction(
+            session=session, data=transaction, user_id=current_user.id
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
-
-    new_transaction = Transaction(
-        **transaction.model_dump(),
-        total_amount=total_amount,
-        payment_status=payment_status,
-        user_id=current_user.id,
-    )
-
-    session.add(new_transaction)
-    await session.commit()
-    await session.refresh(new_transaction)
 
     return new_transaction
 
