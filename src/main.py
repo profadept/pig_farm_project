@@ -8,6 +8,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.database import get_session
+from src.exceptions import TransactionNotFoundError
 from src.models import (
     CategoryEnum,
     Transaction,
@@ -18,7 +19,11 @@ from src.models import (
 )
 from src.schemas.transaction import TransactionCreate, TransactionRead
 from src.security import hash_password, verify_password
-from src.services.transaction import compute_transaction_totals, create_transaction
+from src.services.transaction import (
+    compute_transaction_totals,
+    create_transaction,
+    get_transaction,
+)
 
 app = FastAPI(
     title="Pig Farm ERP",
@@ -77,6 +82,13 @@ async def admin_access_denied_handler(
     in the app, this net catches them and bounces them to the ledger safely.
     """
     return RedirectResponse(url="/ledger?msg=denied", status_code=303)
+
+
+@app.exception_handler(TransactionNotFoundError)
+async def transaction_not_found_handler(
+    request: Request, exc: TransactionNotFoundError
+):
+    return RedirectResponse(url="/ledger?msg=not_found", status_code=303)
 
 
 async def redirect_if_authenticated(
@@ -430,10 +442,7 @@ async def view_transaction(
     """The View Route (Read)Fetches a single transaction,
     and displays it on a dedicated receipt page."""
 
-    transaction = await session.get(Transaction, id)
-
-    if not transaction:
-        raise HTTPException(status_code=404, detail="Transaction not found")
+    transaction = await get_transaction(session, id)
 
     return templates.TemplateResponse(
         "view_transaction.html",
