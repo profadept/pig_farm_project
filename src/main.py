@@ -453,9 +453,7 @@ async def delete_transaction(
     """The Delete Route (Destroy)Permanently
     removes a transaction from Postgres and reloads the ledger."""
 
-    transaction = await session.get(Transaction, id)
-    if not transaction:
-        raise HTTPException(status_code=404, detail="Transaction not found")
+    transaction = await get_transaction(session, id)
 
     await session.delete(transaction)
     await session.commit()
