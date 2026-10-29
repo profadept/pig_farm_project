@@ -1,5 +1,6 @@
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from src.exceptions import TransactionNotFoundError
 from src.models.transaction import StatusEnum, Transaction
 from src.schemas.transaction import TransactionCreate
 
@@ -43,4 +44,14 @@ async def create_transaction(
     session.add(transaction)
     await session.commit()
     await session.refresh(transaction)
+    return transaction
+
+
+async def get_transaction(session: AsyncSession, transaction_id: int) -> Transaction:
+
+    transaction = await session.get(Transaction, transaction_id)
+
+    if transaction is None:
+        raise TransactionNotFoundError("transaction not found")
+
     return transaction
