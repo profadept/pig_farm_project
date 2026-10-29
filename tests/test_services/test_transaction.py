@@ -1,8 +1,13 @@
 import pytest
 
+from src.exceptions import TransactionNotFoundError
 from src.models.transaction import StatusEnum
 from src.schemas.transaction import TransactionCreate
-from src.services.transaction import compute_transaction_totals, create_transaction
+from src.services.transaction import (
+    compute_transaction_totals,
+    create_transaction,
+    get_transaction,
+)
 
 
 def test_compute_totals_paid():
@@ -75,3 +80,29 @@ async def test_create_transaction_reject_overpaid_amount(test_session, test_user
 
     with pytest.raises(ValueError, match="cannot exceed"):
         await create_transaction(test_session, data, test_user.id)
+
+
+async def test_get_transaction_returns_saved_transaction(test_session, test_user):
+    data = TransactionCreate(
+        txn_date="2026-08-16",
+        txn_type="Expense",
+        category="Transport & Logistics",
+        item_description="Commute to Farm",
+        qty=1,
+        unit_of_measure="Head",
+        unit_price=2000,
+        amount_paid=2000,
+        entity_name="Public Transport",
+        reference_tag="Test",
+    )
+
+    saved = await create_transaction(test_session, data, test_user.id)
+
+    found = await get_transaction(test_session, saved.id)
+
+    assert found.id == saved.id
+
+
+async def test_get_transaction_not_found_raises(test_session):
+    with pytest.raises(TransactionNotFoundError):
+        await get_transaction(test_session, 9999999)
