@@ -128,6 +128,12 @@
             <strong>⛔ Access Denied.</strong> The <b>Current (Old) Password</b> you entered is incorrect.
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
+
+        {% elif msg == 'not_found' %}
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 border-start border-danger border-4" role="alert">
+            <strong>⛔ Not Found.</strong> That transaction does not exist.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
         {% endif %}
 
         {% block content %}{% endblock %}
