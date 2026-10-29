@@ -8,7 +8,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.database import get_session
-from src.exceptions import TransactionNotFoundError
+from src.exceptions import AdminAccessDeniedException, TransactionNotFoundError
 from src.models import (
     CategoryEnum,
     Transaction,
@@ -32,12 +32,6 @@ app = FastAPI(
 )
 
 templates = Jinja2Templates(directory="templates")
-
-
-class AdminAccessDeniedException(Exception):
-    """Triggered when a STAFF member tries to perform an ADMIN action."""
-
-    pass
 
 
 async def get_current_user(
