@@ -31,3 +31,31 @@ async def test_view_existing_transaction_returns_page(
     response = await test_login.get(f"/transaction/{saved.id}")
 
     assert response.status_code == 200
+
+
+async def test_edit_missing_transaction_redirects_to_ledger(test_login):
+    response = await test_login.get("/edit-transaction/999999")
+
+    assert response.status_code == 303
+    assert response.headers["location"] == "/ledger?msg=not_found"
+
+
+async def test_edit_missing_transaction_post_redirects_to_ledger(test_login):
+
+    data = {
+        "txn_date": "2026-08-16",
+        "txn_type": "Expense",
+        "category": "Transport & Logistics",
+        "item_description": "Commute to Farm",
+        "qty": 1,
+        "unit_of_measure": "Head",
+        "unit_price": 2000,
+        "amount_paid": 1500,
+        "entity_name": "Public Transport",
+        "reference_tag": "Test",
+    }
+
+    response = await test_login.post("/edit-transaction/999999", data=data)
+
+    assert response.status_code == 303
+    assert response.headers["location"] == "/ledger?msg=not_found"

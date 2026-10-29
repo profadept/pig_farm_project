@@ -370,10 +370,7 @@ async def show_edit_transaction(
     and hands it to the edit form so Jinja2 can pre-fill the boxes.
     """
 
-    transaction = await session.get(Transaction, id)
-
-    if not transaction:
-        raise HTTPException(status_code=404, detail="Transaction not found")
+    transaction = await get_transaction(session, id)
 
     return templates.TemplateResponse(
         "edit_transaction.html",
@@ -401,10 +398,7 @@ async def process_edit_transaction(
     """Catches the submitted form data, finds the original record,
     overwrites the old data with the newly typed data, and saves it."""
 
-    transaction = await session.get(Transaction, id)
-
-    if not transaction:
-        raise HTTPException(status_code=404, detail="Transaction not found")
+    transaction = await get_transaction(session, id)
 
     try:
         total_amount, payment_status = compute_transaction_totals(
