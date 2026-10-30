@@ -28,6 +28,16 @@ Branches deferred to be picked up later.
 - docs/standardize-docstrings — proper Google-style docstrings across
   all route handlers in main.py.
 - chore/add-claude-md — commit CLAUDE.md and docs/ into the repo.
+- refactor/money-to-decimal — money is float end to end (model, schema,
+  service). Use Decimal in Python and Numeric in Postgres. Needs a
+  migration; own branch.
+- test/move-api-tests — move tests/test_transactions_api.py to
+  tests/test_api/. The create test sends payment_status equal to the
+  expected result, so it can't prove the server overrides it; send
+  "Paid" and assert partially_paid, like the web test.
+- feat/handle-service-value-errors — zero-total and overpaid inputs
+  return raw JSON 400 in the browser. Handle them in the web routes
+  with a redirect and alert.
 
 ## Phase 4
 - Tests per service, then per API route, then per web route.
