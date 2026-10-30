@@ -55,3 +55,23 @@ async def get_transaction(session: AsyncSession, transaction_id: int) -> Transac
         raise TransactionNotFoundError("transaction not found")
 
     return transaction
+
+
+async def update_transaction(
+    session: AsyncSession, transaction_id: int, data: TransactionCreate
+) -> Transaction:
+
+    transaction = await get_transaction(session, transaction_id)
+
+    total_amount, payment_status = compute_transaction_totals(
+        qty=data.qty, unit_price=data.unit_price, amount_paid=data.amount_paid
+    )
+
+    for field, value in data.model_dump().items():
+        setattr(transaction, field, value)
+    transaction.total_amount = total_amount
+    transaction.payment_status = payment_status
+
+    await session.commit()
+    await session.refresh(transaction)
+    return transaction
