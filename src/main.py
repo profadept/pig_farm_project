@@ -20,9 +20,9 @@ from src.models import (
 from src.schemas.transaction import TransactionCreate, TransactionRead
 from src.security import hash_password, verify_password
 from src.services.transaction import (
-    compute_transaction_totals,
     create_transaction,
     get_transaction,
+    update_transaction,
 )
 
 app = FastAPI(
@@ -392,31 +392,24 @@ async def process_edit_transaction(
     """Catches the submitted form data, finds the original record,
     overwrites the old data with the newly typed data, and saves it."""
 
-    transaction = await get_transaction(session, id)
+    data = TransactionCreate(
+        txn_date=txn_date,
+        txn_type=txn_type,
+        category=category,
+        item_description=item_description,
+        qty=qty,
+        unit_of_measure=unit_of_measure,
+        unit_price=unit_price,
+        amount_paid=amount_paid,
+        entity_name=entity_name,
+        reference_tag=reference_tag,
+        remarks=remarks,
+    )
 
     try:
-        total_amount, payment_status = compute_transaction_totals(
-            qty=qty, unit_price=unit_price, amount_paid=amount_paid
-        )
+        await update_transaction(session, id, data)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
-
-    transaction.txn_date = txn_date
-    transaction.txn_type = txn_type
-    transaction.category = category
-    transaction.item_description = item_description
-    transaction.qty = qty
-    transaction.unit_of_measure = unit_of_measure
-    transaction.unit_price = unit_price
-    transaction.total_amount = total_amount
-    transaction.amount_paid = amount_paid
-    transaction.payment_status = payment_status
-    transaction.entity_name = entity_name
-    transaction.reference_tag = reference_tag
-    transaction.remarks = remarks
-
-    session.add(transaction)
-    await session.commit()
     return RedirectResponse(url="/ledger?msg=edited", status_code=303)
 
 
