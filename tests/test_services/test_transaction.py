@@ -7,6 +7,7 @@ from src.services.transaction import (
     compute_transaction_totals,
     create_transaction,
     get_transaction,
+    update_transaction,
 )
 
 
@@ -106,3 +107,78 @@ async def test_get_transaction_returns_saved_transaction(test_session, test_user
 async def test_get_transaction_not_found_raises(test_session):
     with pytest.raises(TransactionNotFoundError):
         await get_transaction(test_session, 9999999)
+
+
+async def test_update_transaction_compute_totals(test_session, test_user):
+    save_data = TransactionCreate(
+        txn_date="2026-08-16",
+        txn_type="Expense",
+        category="Transport & Logistics",
+        item_description="Commute to Farm",
+        qty=1,
+        unit_of_measure="Head",
+        unit_price=2000,
+        amount_paid=0,
+        entity_name="Public Transport",
+        reference_tag="Test",
+    )
+
+    saved = await create_transaction(test_session, save_data, test_user.id)
+
+    update_data = TransactionCreate(
+        txn_date="2026-08-16",
+        txn_type="Expense",
+        category="Transport & Logistics",
+        item_description="Commute to Farm",
+        qty=1,
+        unit_of_measure="Head",
+        unit_price=2000,
+        amount_paid=2000,
+        entity_name="Public Transport",
+        reference_tag="Test",
+    )
+
+    updated = await update_transaction(test_session, saved.id, update_data)
+
+    assert updated.total_amount == 2000
+    assert updated.payment_status == StatusEnum.paid
+
+
+async def test_update_transaction_overpaid_raises_and_keeps_row(
+    test_session, test_user
+):
+    save_data = TransactionCreate(
+        txn_date="2026-08-16",
+        txn_type="Expense",
+        category="Transport & Logistics",
+        item_description="Commute to Farm",
+        qty=1,
+        unit_of_measure="Head",
+        unit_price=2000,
+        amount_paid=0,
+        entity_name="Public Transport",
+        reference_tag="Test",
+    )
+
+    saved = await create_transaction(test_session, save_data, test_user.id)
+
+    bad_data = TransactionCreate(
+        txn_date="2026-08-16",
+        txn_type="Expense",
+        category="Transport & Logistics",
+        item_description="Changed",
+        qty=1,
+        unit_of_measure="Head",
+        unit_price=2000,
+        amount_paid=3000,
+        entity_name="Public Transport",
+        reference_tag="Test",
+    )
+
+    with pytest.raises(ValueError, match="cannot exceed"):
+        await update_transaction(test_session, saved.id, bad_data)
+
+    unchanged = await get_transaction(test_session, saved.id)
+
+    assert unchanged.amount_paid == 0
+    assert unchanged.item_description == "Commute to Farm"
