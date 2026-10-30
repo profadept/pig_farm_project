@@ -1,6 +1,7 @@
 import pytest
 
 from src.exceptions import TransactionNotFoundError
+from src.models.transaction import StatusEnum
 from src.services.transaction import (
     TransactionCreate,
     create_transaction,
@@ -102,3 +103,82 @@ async def test_delete_existing_transaction_removes_it(
 
     with pytest.raises(TransactionNotFoundError):
         await get_transaction(test_session, saved.id)
+
+
+async def test_edit_existing_transaction_updates_it(
+    test_login, test_session, test_user
+):
+
+    saved_data = TransactionCreate(
+        txn_date="2026-08-16",
+        txn_type="Expense",
+        category="Transport & Logistics",
+        item_description="Commute to Farm",
+        qty=1,
+        unit_of_measure="Head",
+        unit_price=2000,
+        amount_paid=0,
+        entity_name="Public Transport",
+        reference_tag="Test",
+    )
+
+    saved = await create_transaction(test_session, saved_data, test_user.id)
+
+    update_data = {
+        "txn_date": "2026-08-16",
+        "txn_type": "Expense",
+        "category": "Transport & Logistics",
+        "item_description": "Commute to Farm",
+        "qty": 1,
+        "unit_of_measure": "Head",
+        "unit_price": 2000,
+        "amount_paid": 2000,
+        "entity_name": "Public Transport",
+        "reference_tag": "Test",
+    }
+
+    response = await test_login.post(f"/edit-transaction/{saved.id}", data=update_data)
+
+    assert response.status_code == 303
+    assert response.headers["location"] == "/ledger?msg=edited"
+
+    updated = await get_transaction(test_session, saved.id)
+
+    assert updated.amount_paid == 2000
+    assert updated.payment_status == StatusEnum.paid
+
+
+async def test_edit_overpaid_transaction_returns_400(
+    test_login, test_session, test_user
+):
+    saved_data = TransactionCreate(
+        txn_date="2026-08-16",
+        txn_type="Expense",
+        category="Transport & Logistics",
+        item_description="Commute to Farm",
+        qty=1,
+        unit_of_measure="Head",
+        unit_price=2000,
+        amount_paid=0,
+        entity_name="Public Transport",
+        reference_tag="Test",
+    )
+
+    saved = await create_transaction(test_session, saved_data, test_user.id)
+
+    bad_data = {
+        "txn_date": "2026-08-16",
+        "txn_type": "Expense",
+        "category": "Transport & Logistics",
+        "item_description": "Commute to Farm",
+        "qty": 1,
+        "unit_of_measure": "Head",
+        "unit_price": 2000,
+        "amount_paid": 3000,
+        "entity_name": "Public Transport",
+        "reference_tag": "Test",
+    }
+
+    response = await test_login.post(f"/edit-transaction/{saved.id}", data=bad_data)
+
+    assert response.status_code == 400
