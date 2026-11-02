@@ -182,3 +182,40 @@ async def test_edit_overpaid_transaction_returns_400(
     response = await test_login.post(f"/edit-transaction/{saved.id}", data=bad_data)
 
     assert response.status_code == 400
+
+
+async def test_ledger_filters_by_payment_status(test_login, test_session, test_user):
+    unpaid_data = TransactionCreate(
+        txn_date="2026-08-16",
+        txn_type="Expense",
+        category="Transport & Logistics",
+        item_description="Unpaid pig feed",
+        qty=1,
+        unit_of_measure="Head",
+        unit_price=2000,
+        amount_paid=0,
+        entity_name="Public Transport",
+        reference_tag="Test",
+    )
+
+    paid_data = TransactionCreate(
+        txn_date="2026-08-16",
+        txn_type="Expense",
+        category="Transport & Logistics",
+        item_description="Paid pig feed",
+        qty=1,
+        unit_of_measure="Head",
+        unit_price=2000,
+        amount_paid=2000,
+        entity_name="Public Transport",
+        reference_tag="Test",
+    )
+
+    await create_transaction(test_session, unpaid_data, test_user.id)
+    await create_transaction(test_session, paid_data, test_user.id)
+
+    response = await test_login.get("/ledger?payment_status=paid")
+
+    assert response.status_code == 200
+    assert "Paid pig feed" in response.text
+    assert "Unpaid pig feed" not in response.text
