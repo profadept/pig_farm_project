@@ -21,6 +21,7 @@ from src.schemas.transaction import TransactionCreate, TransactionRead
 from src.security import hash_password, verify_password
 from src.services.transaction import (
     create_transaction,
+    delete_transaction,
     get_transaction,
     update_transaction,
 )
@@ -432,7 +433,7 @@ async def view_transaction(
 
 
 @app.post("/delete-transaction/{id}", response_class=RedirectResponse)
-async def delete_transaction(
+async def delete_transaction_endpoint(
     id: int,
     admin_user: User = Depends(get_admin_user),
     session: AsyncSession = Depends(get_session),
@@ -440,10 +441,7 @@ async def delete_transaction(
     """The Delete Route (Destroy)Permanently
     removes a transaction from Postgres and reloads the ledger."""
 
-    transaction = await get_transaction(session, id)
-
-    await session.delete(transaction)
-    await session.commit()
+    await delete_transaction(session, id)
 
     return RedirectResponse(url="/ledger?msg=deleted", status_code=303)
 
