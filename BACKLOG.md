@@ -16,8 +16,6 @@ Branches deferred to be picked up later.
   category/status values (ignore the filter or redirect with an alert).
 
 ## Phase 3 (in progress)
-- feat/add-services — extract business logic from routes into service
-  functions. Both API and web routers call the same service.
 - refactor/add-routers — split main.py into src/routers/api/ and
   src/routers/web/ per domain.
 - feat/add-dependencies — extract get_current_user, get_db_session;
