@@ -11,6 +11,9 @@ Branches deferred to be picked up later.
   username, unsigned. Anyone on the LAN can forge it and log in as any
   user, including admin. Sign the cookie or use a random session token.
   Do before exposing the app beyond trusted users.
+- fix/ledger-invalid-filter-values — /ledger?payment_status=banana or an
+  old capitalised link raises KeyError and returns 500. Handle unknown
+  category/status values (ignore the filter or redirect with an alert).
 
 ## Phase 3 (in progress)
 - feat/add-services — extract business logic from routes into service
@@ -38,6 +41,8 @@ Branches deferred to be picked up later.
 - feat/handle-service-value-errors — zero-total and overpaid inputs
   return raw JSON 400 in the browser. Handle them in the web routes
   with a redirect and alert.
+- test/admin-only-delete — no test proves a staff user is refused on
+  delete. Needs a second user fixture and a login as that user.
 
 ## Phase 4
 - Tests per service, then per API route, then per web route.
