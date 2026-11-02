@@ -11,6 +11,7 @@ from src.database import get_session
 from src.exceptions import AdminAccessDeniedException, TransactionNotFoundError
 from src.models import (
     CategoryEnum,
+    StatusEnum,
     Transaction,
     TransactionTypeEnum,
     UnitOfMeasureEnum,
@@ -23,6 +24,7 @@ from src.services.transaction import (
     create_transaction,
     delete_transaction,
     get_transaction,
+    list_transactions,
     update_transaction,
 )
 
@@ -326,26 +328,27 @@ async def read_ledger(
     Only queries the database if at least one search parameter is provided.
     Otherwise, returns an empty list to keep the initial page load clean.
     """
-
-    query = select(Transaction).options(selectinload(Transaction.user))
+    parsed_start = None
+    parsed_end = None
+    parsed_category = None
+    parsed_payment_status = None
 
     if start_date and start_date.strip() != "":
         parsed_start = datetime.strptime(start_date, "%Y-%m-%d").date()
-        query = query.where(Transaction.txn_date >= parsed_start)
-
     if end_date and end_date.strip() != "":
         parsed_end = datetime.strptime(end_date, "%Y-%m-%d").date()
-        query = query.where(Transaction.txn_date <= parsed_end)
-
     if category and category.strip() != "":
-        query = query.where(Transaction.category == category)
-
+        parsed_category = CategoryEnum[category]
     if payment_status and payment_status.strip() != "":
-        query = query.where(Transaction.payment_status == payment_status)
+        parsed_payment_status = StatusEnum[payment_status]
 
-    statement = query.order_by(Transaction.txn_date.desc())
-    results = await session.exec(statement)
-    transactions = results.all()
+    transactions = await list_transactions(
+        session=session,
+        category=parsed_category,
+        start_date=parsed_start,
+        end_date=parsed_end,
+        payment_status=parsed_payment_status,
+    )
 
     return templates.TemplateResponse(
         "ledger.html",
