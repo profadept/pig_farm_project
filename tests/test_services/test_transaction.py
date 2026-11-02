@@ -1,13 +1,16 @@
+from datetime import date
+
 import pytest
 
 from src.exceptions import TransactionNotFoundError
-from src.models.transaction import StatusEnum
+from src.models.transaction import CategoryEnum, StatusEnum
 from src.schemas.transaction import TransactionCreate
 from src.services.transaction import (
     compute_transaction_totals,
     create_transaction,
     delete_transaction,
     get_transaction,
+    list_transactions,
     update_transaction,
 )
 
@@ -210,3 +213,155 @@ async def test_delete_transaction_removes_row(test_session, test_user):
 async def test_delete_transaction_not_found_raises(test_session):
     with pytest.raises(TransactionNotFoundError):
         await delete_transaction(test_session, 9999999)
+
+
+async def test_list_transaction_filters_by_payment_status(test_session, test_user):
+    unpaid_data = TransactionCreate(
+        txn_date="2026-08-16",
+        txn_type="Expense",
+        category="Transport & Logistics",
+        item_description="Commute to Farm",
+        qty=1,
+        unit_of_measure="Head",
+        unit_price=2000,
+        amount_paid=0,
+        entity_name="Public Transport",
+        reference_tag="Test",
+    )
+    await create_transaction(test_session, unpaid_data, test_user.id)
+
+    paid_data = TransactionCreate(
+        txn_date="2026-08-16",
+        txn_type="Expense",
+        category="Transport & Logistics",
+        item_description="Commute to Farm",
+        qty=1,
+        unit_of_measure="Head",
+        unit_price=2000,
+        amount_paid=2000,
+        entity_name="Public Transport",
+        reference_tag="Test",
+    )
+    paid = await create_transaction(test_session, paid_data, test_user.id)
+
+    result = await list_transactions(test_session, payment_status=StatusEnum.paid)
+
+    assert [t.id for t in result] == [paid.id]
+
+
+async def test_list_transaction_filters_by_date_range(test_session, test_user):
+    date_1_data = TransactionCreate(
+        txn_date="2026-08-01",
+        txn_type="Expense",
+        category="Transport & Logistics",
+        item_description="Commute to Farm",
+        qty=1,
+        unit_of_measure="Head",
+        unit_price=2000,
+        amount_paid=2000,
+        entity_name="Public Transport",
+        reference_tag="Test",
+    )
+    await create_transaction(test_session, date_1_data, test_user.id)
+
+    date_2_data = TransactionCreate(
+        txn_date="2026-08-16",
+        txn_type="Expense",
+        category="Transport & Logistics",
+        item_description="Commute to Farm",
+        qty=1,
+        unit_of_measure="Head",
+        unit_price=2000,
+        amount_paid=2000,
+        entity_name="Public Transport",
+        reference_tag="Test",
+    )
+    middle = await create_transaction(test_session, date_2_data, test_user.id)
+
+    date_3_data = TransactionCreate(
+        txn_date="2026-08-30",
+        txn_type="Expense",
+        category="Transport & Logistics",
+        item_description="Commute to Farm",
+        qty=1,
+        unit_of_measure="Head",
+        unit_price=2000,
+        amount_paid=2000,
+        entity_name="Public Transport",
+        reference_tag="Test",
+    )
+    await create_transaction(test_session, date_3_data, test_user.id)
+
+    result = await list_transactions(
+        test_session, start_date=date(2026, 8, 10), end_date=date(2026, 8, 20)
+    )
+
+    assert [t.id for t in result] == [middle.id]
+
+
+async def test_list_transaction_filters_by_category(test_session, test_user):
+    feed_data = TransactionCreate(
+        txn_date="2026-08-16",
+        txn_type="Expense",
+        category="Feed",
+        item_description="Commute to Farm",
+        qty=1,
+        unit_of_measure="Head",
+        unit_price=2000,
+        amount_paid=2000,
+        entity_name="Public Transport",
+        reference_tag="Test",
+    )
+    feed = await create_transaction(test_session, feed_data, test_user.id)
+
+    transport_data = TransactionCreate(
+        txn_date="2026-08-16",
+        txn_type="Expense",
+        category="Transport & Logistics",
+        item_description="Commute to Farm",
+        qty=1,
+        unit_of_measure="Head",
+        unit_price=2000,
+        amount_paid=2000,
+        entity_name="Public Transport",
+        reference_tag="Test",
+    )
+    await create_transaction(test_session, transport_data, test_user.id)
+
+    result = await list_transactions(test_session, category=CategoryEnum.feed)
+
+    assert [t.id for t in result] == [feed.id]
+
+
+async def test_list_transaction_orders_newest_first(test_session, test_user):
+    older_data = TransactionCreate(
+        txn_date="2026-08-01",
+        txn_type="Expense",
+        category="Feed",
+        item_description="Commute to Farm",
+        qty=1,
+        unit_of_measure="Head",
+        unit_price=2000,
+        amount_paid=2000,
+        entity_name="Public Transport",
+        reference_tag="Test",
+    )
+    older = await create_transaction(test_session, older_data, test_user.id)
+
+    newer_data = TransactionCreate(
+        txn_date="2026-08-20",
+        txn_type="Expense",
+        category="Transport & Logistics",
+        item_description="Commute to Farm",
+        qty=1,
+        unit_of_measure="Head",
+        unit_price=2000,
+        amount_paid=2000,
+        entity_name="Public Transport",
+        reference_tag="Test",
+    )
+    newer = await create_transaction(test_session, newer_data, test_user.id)
+
+    result = await list_transactions(test_session)
+
+    assert [t.id for t in result] == [newer.id, older.id]
