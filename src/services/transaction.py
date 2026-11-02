@@ -1,7 +1,11 @@
+from datetime import date
+
+from sqlalchemy.orm import selectinload
+from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.exceptions import TransactionNotFoundError
-from src.models.transaction import StatusEnum, Transaction
+from src.models.transaction import CategoryEnum, StatusEnum, Transaction
 from src.schemas.transaction import TransactionCreate
 
 
@@ -83,3 +87,28 @@ async def delete_transaction(session: AsyncSession, transaction_id: int) -> None
 
     await session.delete(transaction)
     await session.commit()
+
+
+async def list_transactions(
+    session: AsyncSession,
+    category: CategoryEnum | None = None,
+    start_date: date | None = None,
+    end_date: date | None = None,
+    payment_status: StatusEnum | None = None,
+) -> list[Transaction]:
+    statement = select(Transaction).options(selectinload(Transaction.user))
+
+    if category is not None:
+        statement = statement.where(Transaction.category == category)
+    if payment_status is not None:
+        statement = statement.where(Transaction.payment_status == payment_status)
+    if start_date is not None:
+        statement = statement.where(Transaction.txn_date >= start_date)
+    if end_date is not None:
+        statement = statement.where(Transaction.txn_date <= end_date)
+
+    statement = statement.order_by(Transaction.txn_date.desc())
+
+    results = await session.exec(statement)
+
+    return results.all()
