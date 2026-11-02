@@ -219,3 +219,77 @@ async def test_ledger_filters_by_payment_status(test_login, test_session, test_u
     assert response.status_code == 200
     assert "Paid pig feed" in response.text
     assert "Unpaid pig feed" not in response.text
+
+
+async def test_ledger_filters_by_date(test_login, test_session, test_user):
+    first_data = TransactionCreate(
+        txn_date="2026-08-01",
+        txn_type="Expense",
+        category="Transport & Logistics",
+        item_description="First Data",
+        qty=1,
+        unit_of_measure="Head",
+        unit_price=2000,
+        amount_paid=2000,
+        entity_name="Public Transport",
+        reference_tag="Test",
+    )
+
+    second_data = TransactionCreate(
+        txn_date="2026-08-16",
+        txn_type="Expense",
+        category="Transport & Logistics",
+        item_description="Second Data",
+        qty=1,
+        unit_of_measure="Head",
+        unit_price=2000,
+        amount_paid=2000,
+        entity_name="Public Transport",
+        reference_tag="Test",
+    )
+
+    await create_transaction(test_session, first_data, test_user.id)
+    await create_transaction(test_session, second_data, test_user.id)
+
+    response = await test_login.get("/ledger?start_date=2026-08-10")
+
+    assert response.status_code == 200
+    assert "Second Data" in response.text
+    assert "First Data" not in response.text
+
+
+async def test_ledger_filters_by_category(test_login, test_session, test_user):
+    transport_data = TransactionCreate(
+        txn_date="2026-08-01",
+        txn_type="Expense",
+        category="Transport & Logistics",
+        item_description="Transport Data",
+        qty=1,
+        unit_of_measure="Head",
+        unit_price=2000,
+        amount_paid=2000,
+        entity_name="Public Transport",
+        reference_tag="Test",
+    )
+
+    feed_data = TransactionCreate(
+        txn_date="2026-08-16",
+        txn_type="Expense",
+        category="Feed",
+        item_description="Feed Data",
+        qty=1,
+        unit_of_measure="Head",
+        unit_price=2000,
+        amount_paid=2000,
+        entity_name="Public Transport",
+        reference_tag="Test",
+    )
+
+    await create_transaction(test_session, transport_data, test_user.id)
+    await create_transaction(test_session, feed_data, test_user.id)
+
+    response = await test_login.get("/ledger?category=feed")
+
+    assert response.status_code == 200
+    assert "Feed Data" in response.text
+    assert "Transport Data" not in response.text
