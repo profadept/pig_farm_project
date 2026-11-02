@@ -293,3 +293,10 @@ async def test_ledger_filters_by_category(test_login, test_session, test_user):
     assert response.status_code == 200
     assert "Feed Data" in response.text
     assert "Transport Data" not in response.text
+
+
+async def test_dashboard_unpaid_link_uses_enum_name(test_login):
+    response = await test_login.get("/dashboard")
+
+    assert response.status_code == 200
+    assert "payment_status=unpaid" in response.text
