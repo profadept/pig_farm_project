@@ -18,9 +18,6 @@ Branches deferred to be picked up later.
 ## Phase 3 (in progress)
 - refactor/add-routers — split main.py into src/routers/api/ and
   src/routers/web/ per domain.
-- feat/add-dependencies — extract get_current_user, get_db_session;
-  remove unused session params from show_register_page, login_route,
-  show_settings_page; consider def over async def where no await exists.
 
 ## Cleanup
 - chore/standardize-enum-naming — TransactionTypeEnum uses lowercase
