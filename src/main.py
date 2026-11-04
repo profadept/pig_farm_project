@@ -59,8 +59,6 @@ async def transaction_not_found_handler(
 @app.get("/register")
 async def show_register_page(
     request: Request,
-    farm_session: str | None = Cookie(None),
-    session: AsyncSession = Depends(get_session),
     _guard: None = Depends(redirect_if_authenticated),
 ):
     """Sends the register.html form page, but redirects if already logged in."""
@@ -111,8 +109,6 @@ async def process_registration(
 @app.get("/login")
 async def login_route(
     request: Request,
-    farm_session: str | None = Cookie(None),
-    session: AsyncSession = Depends(get_session),
     _guard: None = Depends(redirect_if_authenticated),
 ):
     """Route users to the login html page, but redirects if already logged in."""
@@ -403,7 +399,6 @@ async def delete_transaction_endpoint(
 def show_settings_page(
     request: Request,
     current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session),
 ):
     """Sees the user profile and settings dashboard."""
 
