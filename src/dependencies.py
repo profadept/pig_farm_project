@@ -38,3 +38,21 @@ def get_admin_user(current_user: User = Depends(get_current_user)):
         raise AdminAccessDeniedException()
 
     return current_user
+
+
+async def redirect_if_authenticated(
+    farm_session: str | None = Cookie(None),
+    session: AsyncSession = Depends(get_session),
+):
+    """The Anti-Bouncer: If you already have a VIP badge, you cannot enter here."""
+
+    if farm_session:
+        statement = select(User).where(User.username == farm_session)
+        result = await session.exec(statement)
+        user = result.first()
+
+        if user and user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_303_SEE_OTHER,
+                headers={"Location": "/dashboard"},
+            )
