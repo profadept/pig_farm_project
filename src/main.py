@@ -1,6 +1,6 @@
 from datetime import date, datetime
 
-from fastapi import Cookie, Depends, FastAPI, Form, HTTPException, Request, status
+from fastapi import Cookie, Depends, FastAPI, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import selectinload
@@ -8,7 +8,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.database import get_session
-from src.dependencies import get_admin_user, get_current_user
+from src.dependencies import get_admin_user, get_current_user, redirect_if_authenticated
 from src.exceptions import AdminAccessDeniedException, TransactionNotFoundError
 from src.models import (
     CategoryEnum,
@@ -54,24 +54,6 @@ async def transaction_not_found_handler(
     request: Request, exc: TransactionNotFoundError
 ):
     return RedirectResponse(url="/ledger?msg=not_found", status_code=303)
-
-
-async def redirect_if_authenticated(
-    farm_session: str | None = Cookie(None),
-    session: AsyncSession = Depends(get_session),
-):
-    """The Anti-Bouncer: If you already have a VIP badge, you cannot enter here."""
-
-    if farm_session:
-        statement = select(User).where(User.username == farm_session)
-        result = await session.exec(statement)
-        user = result.first()
-
-        if user and user.is_active:
-            raise HTTPException(
-                status_code=status.HTTP_303_SEE_OTHER,
-                headers={"Location": "/dashboard"},
-            )
 
 
 @app.get("/register")
