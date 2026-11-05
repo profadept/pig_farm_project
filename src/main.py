@@ -1,4 +1,4 @@
-from fastapi import Cookie, Depends, FastAPI, Form, HTTPException, Request
+from fastapi import Cookie, Depends, FastAPI, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -7,16 +7,12 @@ from src.database import get_session
 from src.dependencies import get_current_user, redirect_if_authenticated
 from src.exceptions import AdminAccessDeniedException, TransactionNotFoundError
 from src.models import (
-    Transaction,
     User,
     UserRole,
 )
+from src.routers.api import transactions as api_transactions
 from src.routers.web import transactions as web_transactions
-from src.schemas.transaction import TransactionCreate, TransactionRead
 from src.security import hash_password, verify_password
-from src.services.transaction import (
-    create_transaction,
-)
 from src.templating import templates
 
 app = FastAPI(
@@ -25,6 +21,7 @@ app = FastAPI(
     version="0.1.0",
 )
 app.include_router(web_transactions.router)
+app.include_router(api_transactions.router)
 
 
 @app.exception_handler(AdminAccessDeniedException)
@@ -222,31 +219,3 @@ async def update_password(
     await session.commit()
 
     return RedirectResponse(url="/settings?msg=password_updated", status_code=303)
-
-
-@app.post("/transactions/", response_model=TransactionRead)
-async def create_transaction_endpoint(
-    transaction: TransactionCreate,
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session),
-):
-    try:
-        new_transaction = await create_transaction(
-            session=session, data=transaction, user_id=current_user.id
-        )
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
-
-    return new_transaction
-
-
-@app.get("/transactions/", response_model=list[TransactionRead])
-async def read_transactions(
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session),
-):
-    statement = select(Transaction)
-    results = await session.exec(statement)
-    output = results.all()
-
-    return output
