@@ -2,7 +2,6 @@ from datetime import date, datetime
 
 from fastapi import Cookie, Depends, FastAPI, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
-from sqlalchemy.orm import selectinload
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -18,6 +17,7 @@ from src.models import (
     User,
     UserRole,
 )
+from src.routers.web import transactions as web_transactions
 from src.schemas.transaction import TransactionCreate, TransactionRead
 from src.security import hash_password, verify_password
 from src.services.transaction import (
@@ -34,6 +34,7 @@ app = FastAPI(
     description="In Progress",
     version="0.1.0",
 )
+app.include_router(web_transactions.router)
 
 
 @app.exception_handler(AdminAccessDeniedException)
@@ -173,29 +174,6 @@ async def read_root(
             "request": request,
             "user": current_user,
         },
-    )
-
-
-@app.get("/dashboard")
-async def read_dashboard(
-    request: Request,
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session),
-):
-    """The Secure Ledger. Must have a valid VIP Cookie."""
-
-    statement = (
-        select(Transaction)
-        .options(selectinload(Transaction.user))
-        .order_by(Transaction.txn_date.desc())
-        .limit(10)
-    )
-    results = await session.exec(statement)
-    transactions = results.all()
-
-    return templates.TemplateResponse(
-        "index.html",
-        {"request": request, "user": current_user, "transactions": transactions},
     )
 
 
