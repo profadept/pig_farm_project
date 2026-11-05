@@ -1,18 +1,13 @@
-from datetime import date
-
 from fastapi import Cookie, Depends, FastAPI, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.database import get_session
-from src.dependencies import get_admin_user, get_current_user, redirect_if_authenticated
+from src.dependencies import get_current_user, redirect_if_authenticated
 from src.exceptions import AdminAccessDeniedException, TransactionNotFoundError
 from src.models import (
-    CategoryEnum,
     Transaction,
-    TransactionTypeEnum,
-    UnitOfMeasureEnum,
     User,
     UserRole,
 )
@@ -21,9 +16,6 @@ from src.schemas.transaction import TransactionCreate, TransactionRead
 from src.security import hash_password, verify_password
 from src.services.transaction import (
     create_transaction,
-    delete_transaction,
-    get_transaction,
-    update_transaction,
 )
 from src.templating import templates
 
@@ -173,81 +165,6 @@ async def read_root(
             "user": current_user,
         },
     )
-
-
-@app.get("/edit-transaction/{id}", response_class=HTMLResponse)
-async def show_edit_transaction(
-    id: int,
-    request: Request,
-    session: AsyncSession = Depends(get_session),
-    current_user: User = Depends(get_current_user),
-):
-    """
-    Extracts the unique ID from the URL, finds that specific record in Postgres,
-    and hands it to the edit form so Jinja2 can pre-fill the boxes.
-    """
-
-    transaction = await get_transaction(session, id)
-
-    return templates.TemplateResponse(
-        "edit_transaction.html",
-        {"request": request, "user": current_user, "transaction": transaction},
-    )
-
-
-@app.post("/edit-transaction/{id}", response_class=RedirectResponse)
-async def process_edit_transaction(
-    id: int,
-    txn_date: date = Form(...),
-    txn_type: TransactionTypeEnum = Form(...),
-    category: CategoryEnum = Form(...),
-    item_description: str = Form(...),
-    qty: float = Form(...),
-    unit_of_measure: UnitOfMeasureEnum = Form(...),
-    unit_price: float = Form(...),
-    amount_paid: float = Form(...),
-    entity_name: str | None = Form(None),
-    reference_tag: str | None = Form(None),
-    remarks: str | None = Form(None),
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session),
-):
-    """Catches the submitted form data, finds the original record,
-    overwrites the old data with the newly typed data, and saves it."""
-
-    data = TransactionCreate(
-        txn_date=txn_date,
-        txn_type=txn_type,
-        category=category,
-        item_description=item_description,
-        qty=qty,
-        unit_of_measure=unit_of_measure,
-        unit_price=unit_price,
-        amount_paid=amount_paid,
-        entity_name=entity_name,
-        reference_tag=reference_tag,
-        remarks=remarks,
-    )
-
-    try:
-        await update_transaction(session, id, data)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
-    return RedirectResponse(url="/ledger?msg=edited", status_code=303)
-
-
-@app.post("/delete-transaction/{id}", response_class=RedirectResponse)
-async def delete_transaction_endpoint(
-    id: int,
-    admin_user: User = Depends(get_admin_user),
-    session: AsyncSession = Depends(get_session),
-):
-    """The Delete Route (Destroy)Permanently
-    removes a transaction from Postgres and reloads the ledger."""
-
-    await delete_transaction(session, id)
-
-    return RedirectResponse(url="/ledger?msg=deleted", status_code=303)
 
 
 @app.get("/settings", response_class=HTMLResponse)
