@@ -2,7 +2,6 @@ from datetime import date, datetime
 
 from fastapi import Cookie, Depends, FastAPI, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import selectinload
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -28,14 +27,13 @@ from src.services.transaction import (
     list_transactions,
     update_transaction,
 )
+from src.templating import templates
 
 app = FastAPI(
     title="Pig Farm ERP",
     description="In Progress",
     version="0.1.0",
 )
-
-templates = Jinja2Templates(directory="templates")
 
 
 @app.exception_handler(AdminAccessDeniedException)
