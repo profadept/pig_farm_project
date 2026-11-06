@@ -15,10 +15,6 @@ Branches deferred to be picked up later.
   old capitalised link raises KeyError and returns 500. Handle unknown
   category/status values (ignore the filter or redirect with an alert).
 
-## Phase 3 (in progress)
-- refactor/add-routers — split main.py into src/routers/api/ and
-  src/routers/web/ per domain.
-
 ## Cleanup
 - chore/standardize-enum-naming — TransactionTypeEnum uses lowercase
   member names (income, expense) while UserRole uses ALL_CAPS (ADMIN,
