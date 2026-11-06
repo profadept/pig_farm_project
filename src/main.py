@@ -1,9 +1,13 @@
 from fastapi import Cookie, Depends, FastAPI, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.database import get_session
+from src.exception_handlers import (
+    admin_access_denied_handler,
+    transaction_not_found_handler,
+)
 from src.exceptions import AdminAccessDeniedException, TransactionNotFoundError
 from src.models import (
     User,
@@ -21,24 +25,8 @@ app = FastAPI(
 app.include_router(web_transactions.router)
 app.include_router(api_transactions.router)
 app.include_router(web_auth.router)
-
-
-@app.exception_handler(AdminAccessDeniedException)
-async def admin_access_denied_handler(
-    request: Request, exc: AdminAccessDeniedException
-):
-    """
-    The Catcher: If anyone pulls the AdminAccessDeniedException alarm anywhere
-    in the app, this net catches them and bounces them to the ledger safely.
-    """
-    return RedirectResponse(url="/ledger?msg=denied", status_code=303)
-
-
-@app.exception_handler(TransactionNotFoundError)
-async def transaction_not_found_handler(
-    request: Request, exc: TransactionNotFoundError
-):
-    return RedirectResponse(url="/ledger?msg=not_found", status_code=303)
+app.add_exception_handler(AdminAccessDeniedException, admin_access_denied_handler)
+app.add_exception_handler(TransactionNotFoundError, transaction_not_found_handler)
 
 
 @app.get("/", response_class=HTMLResponse)
